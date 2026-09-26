@@ -408,34 +408,16 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         child: PhotoGallery(photos: car.photos, height: 260),
       );
     }
-    final carW = (width - 24).clamp(260.0, 440.0);
-    return SizedBox(
-      height: carW * 0.4 * 1.32 + 36,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, 0.1),
-                  radius: 0.75,
-                  colors: [
-                    const Color(0xFF2A2C30),
-                    AppColors.background.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 24,
-            child: Hero(
-              tag: 'car-${car.id}',
-              child: CarShowcase(car: car, width: carW),
-            ),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 14),
+      child: Hero(
+        tag: 'car-${car.id}',
+        child: Glass(
+          height: 240,
+          radius: 30,
+          shadow: false,
+          child: CarPlaceholder.of(car),
+        ),
       ),
     );
   }

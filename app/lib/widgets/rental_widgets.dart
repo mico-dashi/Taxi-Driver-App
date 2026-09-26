@@ -341,10 +341,12 @@ class PerDayPrice extends StatelessWidget {
 /// The car's picture layer for cards: the cover photo filling the card, or
 /// the drawing floating in the top part of the glass.
 class _CardImage extends StatelessWidget {
-  const _CardImage({required this.car, required this.carWidth});
+  const _CardImage({required this.car, required this.panelHeight});
 
   final Car car;
-  final double carWidth;
+
+  /// Height of the glass info panel at the bottom, kept clear.
+  final double panelHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -370,12 +372,11 @@ class _CardImage extends StatelessWidget {
       );
     }
     return Positioned(
-      top: 34,
+      top: 8,
       left: 0,
       right: 0,
-      child: Center(
-        child: CarShowcase(car: car, width: carWidth, reflection: false),
-      ),
+      bottom: panelHeight,
+      child: CarPlaceholder.of(car),
     );
   }
 }
@@ -398,12 +399,15 @@ class TrendCard extends StatelessWidget {
       shadow: false,
       child: Stack(
         children: [
-          _CardImage(car: car, carWidth: 212),
-          Positioned(
-            top: 12,
-            left: 12,
-            child: GlassBrand(make: car.make, size: 42),
-          ),
+          const SizedBox.expand(),
+          _CardImage(car: car, panelHeight: 84),
+          // The big logo already shows the brand when there is no photo.
+          if (car.photos.isNotEmpty)
+            Positioned(
+              top: 12,
+              left: 12,
+              child: GlassBrand(make: car.make, size: 42),
+            ),
           Positioned(
             top: 12,
             right: 12,
@@ -517,15 +521,14 @@ class ChooseCarCard extends StatelessWidget {
         shadow: false,
         child: Stack(
           children: [
-            _CardImage(
-              car: car,
-              carWidth: (box.maxWidth * 0.66).clamp(200.0, 300.0),
-            ),
-            Positioned(
-              top: 14,
-              left: 14,
-              child: GlassBrand(make: car.make, size: 46),
-            ),
+            _CardImage(car: car, panelHeight: 92),
+            // The big logo already shows the brand when there is no photo.
+            if (car.photos.isNotEmpty)
+              Positioned(
+                top: 14,
+                left: 14,
+                child: GlassBrand(make: car.make, size: 46),
+              ),
             Positioned(
               top: 14,
               right: 14,

@@ -239,17 +239,12 @@ class _CarFormScreenState extends State<CarFormScreen> {
                 ),
               )
             else
-              Center(
-                child: CarArt(
+              SizedBox(
+                height: 170,
+                child: CarPlaceholder(
+                  make: _make.text,
+                  model: _model.text,
                   color: Color(_color),
-                  shape: shapeForListing(
-                    categoryId: _category,
-                    make: _make.text,
-                    model: _model.text,
-                    seats: _seats,
-                  ),
-                  width: 280,
-                  redCalipers: _category == 'luxury',
                 ),
               ),
             const SizedBox(height: 12),

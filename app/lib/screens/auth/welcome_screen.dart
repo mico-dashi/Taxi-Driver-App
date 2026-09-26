@@ -4,7 +4,6 @@ import '../../app.dart';
 import '../../core/brands.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
-import '../../widgets/car_art.dart';
 import '../../widgets/design.dart';
 import '../../widgets/glass.dart' show GlassBrand;
 import 'login_screen.dart';
@@ -39,7 +38,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final carWidth = (size.width * 0.96).clamp(260.0, 520.0);
     final stageH = (size.height * 0.52).clamp(300.0, 480.0);
     return Scaffold(
       body: Stack(
@@ -98,9 +96,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               ),
             ),
           ),
-          // Hero car with a red glow.
+          // Showroom wall of glass brand logos.
           Positioned(
-            top: stageH * 0.56,
+            top: stageH * 0.5,
             left: 0,
             right: 0,
             child: AnimatedBuilder(
@@ -115,13 +113,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   ),
                 );
               },
-              child: Center(
-                child: CarArt(
-                  color: AppColors.primary,
-                  shape: CarShape.sport,
-                  width: carWidth,
-                ),
-              ),
+              child: const _BrandWall(),
             ),
           ),
           SafeArea(
@@ -158,26 +150,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       color: AppColors.inkSoft,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // Popular brands on the platform, as glass buttons.
-                  SizedBox(
-                    height: 48,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      clipBehavior: Clip.none,
-                      children: [
-                        for (final id in popularBrandIds.take(10))
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: GlassBrand(
-                              make: brandById(id)!.name,
-                              size: 48,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 28),
                   SlideAction(
                     label: context.tr('welcome_cta'),
                     icon: Icons.directions_car_filled_rounded,
@@ -189,6 +162,35 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Two staggered rows of popular brands in glass, the middle ones larger.
+class _BrandWall extends StatelessWidget {
+  const _BrandWall();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget row(List<String> ids, List<double> sizes) => Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        for (var i = 0; i < ids.length; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: GlassBrand(make: brandById(ids[i])!.name, size: sizes[i]),
+          ),
+      ],
+    );
+    return Column(
+      children: [
+        row(['toyota', 'mercedes', 'bmw', 'volkswagen'], [58, 74, 74, 58]),
+        const SizedBox(height: 12),
+        row(['audi', 'porsche', 'hyundai'], [62, 80, 62]),
+        const SizedBox(height: 12),
+        row(['kia', 'skoda', 'tesla', 'jeep'], [50, 58, 58, 50]),
+      ],
     );
   }
 }

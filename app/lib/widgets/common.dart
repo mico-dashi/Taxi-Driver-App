@@ -65,39 +65,37 @@ IconData categoryIcon(String categoryId) => switch (categoryId) {
   _ => Icons.directions_car_filled_rounded,
 };
 
-/// The car's "photo": a side-view drawing of the car in its own colour on
-/// a dark tile. Owners can add real photos later (see docs/GOING_LIVE.md).
+/// Small car thumbnail for lists: the cover photo, or the brand logo on
+/// a glass tile.
 class CarBadge extends StatelessWidget {
-  const CarBadge({
-    super.key,
-    required this.color,
-    this.shape = CarShape.hatch,
-    this.size = 56,
-  });
+  const CarBadge({super.key, required this.car, this.size = 56});
 
-  CarBadge.of(Car car, {super.key, this.size = 56})
-    : color = Color(car.colorValue),
-      shape = shapeFor(car);
+  const CarBadge.of(this.car, {super.key, this.size = 56});
 
-  final Color color;
-  final CarShape shape;
+  final Car car;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size * 1.5,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: const RadialGradient(
-          center: Alignment(0, 0.3),
-          radius: 0.9,
-          colors: [Color(0xFF3A3D41), AppColors.surfaceHigh],
+    final radius = BorderRadius.circular(size * 0.28);
+    if (car.photos.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: radius,
+        child: SizedBox(
+          width: size * 1.4,
+          height: size,
+          child: CarPhoto(car.photos.first),
         ),
-        borderRadius: BorderRadius.circular(size * 0.26),
+      );
+    }
+    return Glass(
+      width: size * 1.4,
+      height: size,
+      radius: size * 0.28,
+      shadow: false,
+      child: Center(
+        child: BrandLogo(make: car.make, size: size * 0.5),
       ),
-      alignment: Alignment.center,
-      child: CarSideView(color: color, shape: shape, width: size * 1.36),
     );
   }
 }

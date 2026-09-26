@@ -184,8 +184,12 @@ class _BookingScreenState extends State<BookingScreen> {
           CardBox(
             child: Column(
               children: [
-                Center(
-                  child: CarShowcase(car: b.car, width: 250, reflection: false),
+                SizedBox(
+                  height: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: CarImage(car: b.car, width: 250, height: 150),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Row(

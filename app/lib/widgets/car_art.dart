@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 import '../models/models.dart';
+import 'glass.dart' show BrandLogo;
 
 /// Body styles the side-view drawing knows.
 enum CarShape { hatch, sedan, sport, suv, van }
@@ -746,14 +748,117 @@ class CarImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final drawing = Center(
-      child: CarShowcase(car: car, width: width, reflection: reflection),
+    final drawing = SizedBox(
+      width: double.infinity,
+      height: height,
+      child: CarPlaceholder.of(car),
     );
     if (car.photos.isEmpty) return drawing;
     return SizedBox(
       width: double.infinity,
       height: height,
       child: CarPhoto(car.photos.first, fallback: drawing),
+    );
+  }
+}
+
+/// Stand-in until the owner uploads photos: the brand's logo glowing in
+/// front of the model name in giant letters, tinted by the car's colour.
+class CarPlaceholder extends StatelessWidget {
+  const CarPlaceholder({
+    super.key,
+    required this.make,
+    required this.model,
+    required this.color,
+    this.logoScale = 0.42,
+  });
+
+  CarPlaceholder.of(Car car, {super.key, this.logoScale = 0.42})
+    : make = car.make,
+      model = car.model,
+      color = Color(car.colorValue);
+
+  final String make;
+  final String model;
+  final Color color;
+
+  /// Logo size as a share of the box's shorter side.
+  final double logoScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final glow = Color.lerp(AppColors.primary, color, 0.3)!;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final w = box.maxWidth.isFinite ? box.maxWidth : 300.0;
+        final h = box.maxHeight.isFinite ? box.maxHeight : w * 0.6;
+        final logo = (h < w ? h : w) * logoScale;
+        final word = model.trim().isEmpty ? make : model;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.05),
+                  radius: 0.75,
+                  colors: [
+                    glow.withValues(alpha: 0.45),
+                    glow.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+            // Giant model name behind the logo.
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: w * 0.04),
+              child: Center(
+                child: FittedBox(
+                  child: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (r) => LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.22),
+                        Colors.white.withValues(alpha: 0.02),
+                      ],
+                    ).createShader(r),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        word.toUpperCase(),
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 120,
+                          height: 1,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  ImageFiltered(
+                    imageFilter: ui.ImageFilter.blur(
+                      sigmaX: logo * 0.12,
+                      sigmaY: logo * 0.12,
+                    ),
+                    child: BrandLogo(make: make, size: logo, color: glow),
+                  ),
+                  BrandLogo(make: make, size: logo),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
