@@ -26,8 +26,12 @@ class DriveTab extends StatefulWidget {
   State<DriveTab> createState() => _DriveTabState();
 }
 
-class _DriveTabState extends State<DriveTab> {
+class _DriveTabState extends State<DriveTab>
+    with SingleTickerProviderStateMixin {
   final _map = MapController();
+  late final _mover = MapMover(_map, this);
+  DateTime _lastFit = DateTime(2000);
+  RideStatus? _fittedFor;
   bool _mapReady = false;
   bool _online = false;
   bool _toggling = false;
@@ -59,6 +63,7 @@ class _DriveTabState extends State<DriveTab> {
     _rideSub?.cancel();
     _gpsSub?.cancel();
     _heartbeat?.cancel();
+    _mover.dispose();
     super.dispose();
   }
 
@@ -81,12 +86,35 @@ class _DriveTabState extends State<DriveTab> {
       final target = ride.status == RideStatus.inProgress
           ? ride.request.destination.point
           : ride.request.pickup.point;
-      fitPoints(_map, [
-        _me,
-        target,
-      ], padding: const EdgeInsets.fromLTRB(60, 140, 60, 360));
+      // Re-frame smoothly when the stage changes or every few seconds.
+      if (_fittedFor != ride.status ||
+          DateTime.now().difference(_lastFit) > const Duration(seconds: 4)) {
+        _fittedFor = ride.status;
+        _lastFit = DateTime.now();
+        _mover.fit([
+          _me,
+          target,
+        ], padding: const EdgeInsets.fromLTRB(60, 140, 60, 360));
+      }
     }
   }
+
+  /// This driver's own car, for the map while waiting for requests.
+  Driver _meAsDriver() => Driver(
+    id: context.read<AppState>().backend.currentUserId,
+    name: '',
+    phone: '',
+    rating: 5,
+    trips: 0,
+    vehicle: const Vehicle(
+      make: '',
+      model: '',
+      plate: '',
+      color: '',
+      categoryId: 'standard',
+    ),
+    location: _me,
+  );
 
   Future<void> _toggleOnline() async {
     final app = context.read<AppState>();
@@ -107,7 +135,7 @@ class _DriveTabState extends State<DriveTab> {
           const Duration(seconds: 30),
           (_) => app.backend.pushLocation(_me, 0),
         );
-        if (_mapReady) _map.move(_me, 15);
+        if (_mapReady) _mover.animateTo(_me, 15);
       } else {
         await app.backend.setOnline(false, _me);
         await _reqSub?.cancel();
@@ -283,9 +311,12 @@ class _DriveTabState extends State<DriveTab> {
                   PolylineLayer(
                     polylines: [
                       routeLine(
-                        ride.status == RideStatus.inProgress
-                            ? ride.request.route.points
-                            : _approach,
+                        remainingRoute(
+                          ride.status == RideStatus.inProgress
+                              ? ride.request.route.points
+                              : _approach,
+                          ride.driver.location,
+                        ),
                       ),
                     ],
                   ),
@@ -298,21 +329,24 @@ class _DriveTabState extends State<DriveTab> {
                       pinMarker(ride.request.pickup.point, pickup: true),
                       pinMarker(ride.request.destination.point, pickup: false),
                     ],
-                    if (meDriver != null)
-                      carMarker(meDriver)
-                    else
+                    if (meDriver == null && !_online)
                       Marker(
                         point: _me,
                         width: 30,
-                        height: 40,
-                        child: TaxiTopView(
-                          color: _online
-                              ? AppColors.primary
-                              : AppColors.inkFaint,
-                        ),
+                        height: 54,
+                        child: const TaxiTopView(dimmed: true),
                       ),
                   ],
                 ),
+                if (meDriver != null || _online)
+                  SmoothCars(
+                    drivers: [meDriver ?? _meAsDriver()],
+                    duration: Duration(
+                      milliseconds: context.read<AppState>().backend.isDemo
+                          ? 300
+                          : 1500,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -344,7 +378,7 @@ class _DriveTabState extends State<DriveTab> {
                   CircleIconButton(
                     icon: Icons.my_location_rounded,
                     onTap: () {
-                      if (_mapReady) _map.move(_me, 15);
+                      if (_mapReady) _mover.animateTo(_me, 15);
                     },
                   ),
                 ],

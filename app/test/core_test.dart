@@ -9,6 +9,7 @@ import 'package:taksi_al/screens/booking/payment_widgets.dart';
 import 'package:taksi_al/screens/driver/vehicle_screen.dart';
 import 'package:taksi_al/services/pricing.dart';
 import 'package:taksi_al/services/routing_service.dart';
+import 'package:taksi_al/widgets/map_widgets.dart';
 
 void main() {
   group('Pricing', () {
@@ -111,6 +112,19 @@ void main() {
       expect(RoutingService.pointAlong([a, b], 1), b);
       final mid = RoutingService.pointAlong([a, b], 0.5);
       expect(mid.latitude, closeTo((a.latitude + b.latitude) / 2, 1e-3));
+    });
+
+    test('remainingRoute drops the part already driven', () {
+      const route = [
+        LatLng(41.30, 19.80),
+        LatLng(41.31, 19.80),
+        LatLng(41.32, 19.80),
+        LatLng(41.33, 19.80),
+      ];
+      final rest = remainingRoute(route, const LatLng(41.315, 19.80));
+      expect(rest.first, const LatLng(41.315, 19.80));
+      expect(rest.skip(1), route.sublist(2));
+      expect(remainingRoute(route, route.first).last, route.last);
     });
 
     test('bearing north is ~0 degrees', () {

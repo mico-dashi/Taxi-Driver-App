@@ -28,8 +28,12 @@ class RideScreen extends StatefulWidget {
   State<RideScreen> createState() => _RideScreenState();
 }
 
-class _RideScreenState extends State<RideScreen> {
+class _RideScreenState extends State<RideScreen>
+    with SingleTickerProviderStateMixin {
   final _map = MapController();
+  late final _mover = MapMover(_map, this);
+  DateTime _lastFit = DateTime(2000);
+  RideStatus? _fittedFor;
   bool _mapReady = false;
   late Ride _ride = widget.initial;
   StreamSubscription<Ride>? _sub;
@@ -47,6 +51,7 @@ class _RideScreenState extends State<RideScreen> {
   @override
   void dispose() {
     _sub?.cancel();
+    _mover.dispose();
     super.dispose();
   }
 
@@ -62,7 +67,7 @@ class _RideScreenState extends State<RideScreen> {
     if (!mounted || _finished) return;
     final prev = _ride.status;
     setState(() => _ride = ride);
-    if (_follow && _mapReady) _fitCamera();
+    if (_follow && _mapReady) _followCar();
     if (prev != ride.status && ride.status == RideStatus.driverArrived) {
       HapticFeedback.heavyImpact();
     }
@@ -94,14 +99,32 @@ class _RideScreenState extends State<RideScreen> {
     if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
-  void _fitCamera() {
-    final target = _ride.status == RideStatus.inProgress
+  static const _padding = EdgeInsets.fromLTRB(60, 140, 60, 380);
+
+  List<LatLng> get _framePoints => [
+    _ride.driver.location,
+    _ride.status == RideStatus.inProgress
         ? _ride.request.destination.point
-        : _ride.request.pickup.point;
-    fitPoints(_map, [
-      _ride.driver.location,
-      target,
-    ], padding: const EdgeInsets.fromLTRB(60, 140, 60, 380));
+        : _ride.request.pickup.point,
+  ];
+
+  void _fitCamera({bool animate = true}) {
+    _lastFit = DateTime.now();
+    _fittedFor = _ride.status;
+    if (animate) {
+      _mover.fit(_framePoints, padding: _padding);
+    } else {
+      fitPoints(_map, _framePoints, padding: _padding);
+    }
+  }
+
+  /// Re-frames the car and its target every few seconds (or when the ride
+  /// changes stage) with a smooth camera move, instead of every GPS update.
+  void _followCar() {
+    if (_fittedFor != _ride.status ||
+        DateTime.now().difference(_lastFit) > const Duration(seconds: 4)) {
+      _fitCamera();
+    }
   }
 
   Future<void> _call() async {
@@ -192,7 +215,10 @@ class _RideScreenState extends State<RideScreen> {
     final r = _ride;
     final inTrip = r.status == RideStatus.inProgress;
     final arrived = r.status == RideStatus.driverArrived;
-    final line = inTrip ? r.request.route.points : _approach;
+    final line = remainingRoute(
+      inTrip ? r.request.route.points : _approach,
+      r.driver.location,
+    );
 
     final String status;
     final String trailing;
@@ -215,14 +241,17 @@ class _RideScreenState extends State<RideScreen> {
             children: [
               Positioned.fill(
                 child: Listener(
-                  onPointerDown: (_) => _follow = false,
+                  onPointerDown: (_) {
+                    _follow = false;
+                    _mover.stop();
+                  },
                   child: AppMap(
                     controller: _map,
                     center: r.request.pickup.point,
                     zoom: 15,
                     onReady: () {
                       _mapReady = true;
-                      _fitCamera();
+                      _fitCamera(animate: false);
                     },
                     children: [
                       if (line.length > 1)
@@ -236,8 +265,15 @@ class _RideScreenState extends State<RideScreen> {
                               pickup: false,
                               label: r.request.destination.name,
                             ),
-                          carMarker(r.driver),
                         ],
+                      ),
+                      SmoothCars(
+                        drivers: [r.driver],
+                        duration: Duration(
+                          milliseconds: context.read<AppState>().backend.isDemo
+                              ? 300
+                              : 1500,
+                        ),
                       ),
                     ],
                   ),

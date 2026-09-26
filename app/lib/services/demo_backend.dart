@@ -290,8 +290,8 @@ class DemoBackend implements Backend {
     ctrl = StreamController<List<Driver>>(
       onListen: () {
         ctrl.add(List.of(_pool));
-        timer = Timer.periodic(_d(2500), (_) {
-          _pool = [for (final dr in _pool) _wander(dr)];
+        timer = Timer.periodic(_d(1000), (_) {
+          _pool = [for (final dr in _pool) _cruiseStep(dr)];
           ctrl.add(List.of(_pool));
         });
       },
@@ -300,11 +300,36 @@ class DemoBackend implements Backend {
     return ctrl.stream;
   }
 
-  Driver _wander(Driver dr) {
-    final next = _offset(dr.location, 0.02 + _rng.nextDouble() * 0.04);
+  /// Idle taxis drive real routes around the area (street routes when the
+  /// routing server is reachable) at about 30 km/h.
+  final _cruises = <String, _Cruise>{};
+  final _cruiseRequested = <String>{};
+
+  Driver _cruiseStep(Driver dr) {
+    final cruise = _cruises[dr.id];
+    if (cruise == null) {
+      if (_cruiseRequested.add(dr.id)) {
+        final target = _offset(_poolCenter, 0.3 + _rng.nextDouble() * 2.0);
+        _routing
+            .route(dr.location, target)
+            .then((r) {
+              _cruises[dr.id] = _Cruise(r.points, 7 + _rng.nextDouble() * 3);
+            })
+            .whenComplete(() => _cruiseRequested.remove(dr.id));
+      }
+      return dr;
+    }
+    cruise.travelled += cruise.speed;
+    final done = cruise.travelled >= cruise.total;
+    final pos = RoutingService.pointAlong(
+      cruise.points,
+      cruise.total == 0 ? 1 : (cruise.travelled / cruise.total).clamp(0, 1),
+    );
+    if (done) _cruises.remove(dr.id);
+    if (pos == dr.location) return dr;
     return dr.copyWith(
-      location: next,
-      heading: RoutingService.bearing(dr.location, next),
+      location: pos,
+      heading: RoutingService.bearing(dr.location, pos),
     );
   }
 
@@ -545,9 +570,11 @@ class DemoBackend implements Backend {
     RideStatus legStatus, {
     required void Function() onDone,
   }) {
-    final totalTicks = (leg.durationMin * 3).clamp(15, 40).round();
+    // Demo trips are compressed to 15–40 s; four small steps per second
+    // keep the car on the drawn route, and the map glides between them.
+    final totalTicks = (leg.durationMin * 3).clamp(15, 40).round() * 4;
     var tick = 0;
-    final timer = Timer.periodic(_d(1000), (t) {
+    final timer = Timer.periodic(_d(250), (t) {
       final ride = _rides[rideId];
       if (ride == null || ride.status != legStatus) {
         t.cancel();
@@ -987,5 +1014,25 @@ class DemoBackend implements Backend {
     for (final id in _rideTimers.keys.toList()) {
       _stopRideTimers(id);
     }
+  }
+}
+
+class _Cruise {
+  _Cruise(this.points, this.speed) : total = _length(points);
+
+  final List<LatLng> points;
+
+  /// Metres per second.
+  final double speed;
+  final double total;
+  double travelled = 0;
+
+  static double _length(List<LatLng> pts) {
+    const d = Distance();
+    var sum = 0.0;
+    for (var i = 0; i < pts.length - 1; i++) {
+      sum += d.as(LengthUnit.Meter, pts[i], pts[i + 1]);
+    }
+    return sum;
   }
 }

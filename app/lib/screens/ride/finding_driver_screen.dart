@@ -231,20 +231,17 @@ class _FindingDriverScreenState extends State<FindingDriverScreen> {
                         ],
                       ),
                     MarkerLayer(
-                      markers: [
-                        for (final d in _drivers)
-                          carMarker(
-                            d,
-                            eta: minutes(
-                              RoutingService.etaMinutes(
-                                d.location,
-                                widget.pickup.point,
-                              ),
-                            ),
-                            highlight: offerDriverIds.contains(d.id),
-                          ),
-                        pinMarker(widget.pickup.point, pickup: true),
-                      ],
+                      markers: [pinMarker(widget.pickup.point, pickup: true)],
+                    ),
+                    SmoothCars(
+                      drivers: _drivers,
+                      labelFor: (d) => minutes(
+                        RoutingService.etaMinutes(
+                          d.location,
+                          widget.pickup.point,
+                        ),
+                      ),
+                      highlight: offerDriverIds,
                     ),
                   ],
                 ),

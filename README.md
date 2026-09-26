@@ -62,6 +62,8 @@ flutter pub get
 flutter run            # Android phone / emulator, iPhone, or: flutter run -d chrome
 ```
 
+**In the browser, with the real map:** the *Web demo (GitHub Pages)* workflow publishes the app to **https://mico-dashi.github.io/Taxi-Driver-App/**. It shows real OpenStreetMap streets and real driving routes. One-time setup: repository **Settings → Pages → Source: GitHub Actions**. It then updates on every change to `main` (or run it by hand from the Actions tab).
+
 **Without a computer:** every push to GitHub runs the **CI** workflow (`.github/workflows/ci.yml`). It tests everything and builds an **Android APK** (and a web version). Open the repository's **Actions** tab → latest run → *Artifacts* → download `taksi-al-android` and install `app-release.apk` on any Android phone.
 
 ## Go live
