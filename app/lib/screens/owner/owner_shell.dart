@@ -5,40 +5,24 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
-import '../../services/supabase_backend.dart';
+import '../../services/pricing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
-import '../passenger/profile_tab.dart';
-import 'drive_tab.dart';
-import 'vehicle_screen.dart';
+import '../common/chats_tab.dart';
+import '../common/profile_widgets.dart';
+import 'my_cars_tab.dart';
+import 'requests_tab.dart';
 
-class DriverShell extends StatefulWidget {
-  const DriverShell({super.key});
+/// "Kam makinë për qira": the owner's side of the app.
+class OwnerShell extends StatefulWidget {
+  const OwnerShell({super.key});
 
   @override
-  State<DriverShell> createState() => _DriverShellState();
+  State<OwnerShell> createState() => _OwnerShellState();
 }
 
-class _DriverShellState extends State<DriverShell> {
+class _OwnerShellState extends State<OwnerShell> {
   int _tab = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _ensureVehicle();
-  }
-
-  /// A driver must register a vehicle before going online.
-  Future<void> _ensureVehicle() async {
-    final vehicle = await context.read<AppState>().backend.myVehicle();
-    if (vehicle != null || !mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<Vehicle>(
-        builder: (_) => const VehicleScreen(required: true),
-      ),
-    );
-    if (mounted) setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,21 +30,37 @@ class _DriverShellState extends State<DriverShell> {
       body: IndexedStack(
         index: _tab,
         children: [
-          const DriveTab(),
+          RequestsTab(
+            key: ValueKey('requests-$_tab'),
+            onAddCar: () => setState(() => _tab = 1),
+          ),
+          const MyCarsTab(),
+          ChatsTab(key: ValueKey('chats-$_tab'), asOwner: true),
           EarningsTab(key: ValueKey('earnings-$_tab')),
-          DriverAccountTab(key: ValueKey('account-$_tab')),
+          const OwnerAccountTab(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primarySoft,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.local_taxi_outlined),
-            selectedIcon: const Icon(Icons.local_taxi_rounded),
-            label: context.tr('tab_drive'),
+            icon: const Icon(Icons.inbox_outlined),
+            selectedIcon: const Icon(Icons.inbox_rounded),
+            label: context.tr('tab_requests'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.directions_car_outlined),
+            selectedIcon: const Icon(Icons.directions_car_rounded),
+            label: context.tr('tab_my_cars'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            selectedIcon: const Icon(Icons.chat_bubble_rounded),
+            label: context.tr('tab_chat'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -86,7 +86,7 @@ class EarningsTab extends StatefulWidget {
 }
 
 class _EarningsTabState extends State<EarningsTab> {
-  late Future<DriverEarnings> _data = context
+  late Future<OwnerEarnings> _data = context
       .read<AppState>()
       .backend
       .earnings();
@@ -96,10 +96,12 @@ class _EarningsTabState extends State<EarningsTab> {
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () async {
-          setState(() => _data = context.read<AppState>().backend.earnings());
+          setState(() {
+            _data = context.read<AppState>().backend.earnings();
+          });
           await _data;
         },
-        child: FutureBuilder<DriverEarnings>(
+        child: FutureBuilder<OwnerEarnings>(
           future: _data,
           builder: (context, snap) {
             final e = snap.data;
@@ -132,12 +134,12 @@ class _EarningsTabState extends State<EarningsTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.tr('today'),
+                          context.tr('this_month'),
                           style: const TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          money(e.today),
+                          money(e.thisMonth),
                           style: const TextStyle(
                             color: AppColors.primary,
                             fontSize: 34,
@@ -147,17 +149,19 @@ class _EarningsTabState extends State<EarningsTab> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            _stat(context.tr('trips'), '${e.tripsToday}'),
-                            if (e.onlineHoursToday > 0)
-                              _stat(
-                                context.tr('online_hours'),
-                                e.onlineHoursToday.toStringAsFixed(1),
-                              ),
                             _stat(
-                              context.tr('avg_trip'),
-                              e.tripsToday == 0
+                              context.tr('rentals'),
+                              '${e.rentalsThisMonth}',
+                            ),
+                            _stat(
+                              context.tr('days_rented'),
+                              '${e.bookedDaysThisMonth}',
+                            ),
+                            _stat(
+                              context.tr('avg_per_day'),
+                              e.bookedDaysThisMonth == 0
                                   ? '—'
-                                  : money(e.today ~/ e.tripsToday),
+                                  : money(e.thisMonth ~/ e.bookedDaysThisMonth),
                             ),
                           ],
                         ),
@@ -169,54 +173,29 @@ class _EarningsTabState extends State<EarningsTab> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.tr('last_7_days'),
-                                style: const TextStyle(
-                                  color: AppColors.inkSoft,
-                                ),
-                              ),
-                              Text(
-                                money(e.week),
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            context.tr('all_time'),
+                            style: const TextStyle(color: AppColors.inkSoft),
                           ),
                         ),
                         Text(
-                          context.tr('n_trips', {'n': '${e.tripsWeek}'}),
-                          style: const TextStyle(color: AppColors.inkSoft),
+                          money(e.allTime),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  CardBox(
-                    color: AppColors.successSoft,
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.verified_outlined,
-                          color: AppColors.success,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(context.tr('zero_commission'))),
-                      ],
-                    ),
-                  ),
-                  SectionLabel(context.tr('recent_trips')),
+                  SectionLabel(context.tr('completed_rentals')),
                   if (e.recent.isEmpty)
                     Text(
-                      context.tr('no_trips_yet'),
+                      context.tr('no_completed_rentals'),
                       style: const TextStyle(color: AppColors.inkSoft),
                     )
                   else
-                    for (final r in e.recent)
+                    for (final b in e.recent)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: CardBox(
@@ -228,7 +207,7 @@ class _EarningsTabState extends State<EarningsTab> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      r.request.destination.name,
+                                      '${b.car.title} · ${b.renterName}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -236,7 +215,7 @@ class _EarningsTabState extends State<EarningsTab> {
                                       ),
                                     ),
                                     Text(
-                                      '${hhmm(r.createdAt)} · ${km(r.request.route.distanceKm)} · ${paymentTypeLabel(context, r.request.payment)}',
+                                      context.dayRange(b.start, b.end),
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.inkSoft,
@@ -246,7 +225,7 @@ class _EarningsTabState extends State<EarningsTab> {
                                 ),
                               ),
                               Text(
-                                money(r.price + r.tip),
+                                money(Pricing.quoteFor(b).total),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -285,36 +264,8 @@ class _EarningsTabState extends State<EarningsTab> {
   );
 }
 
-class DriverAccountTab extends StatefulWidget {
-  const DriverAccountTab({super.key});
-
-  @override
-  State<DriverAccountTab> createState() => _DriverAccountTabState();
-}
-
-class _DriverAccountTabState extends State<DriverAccountTab> {
-  Vehicle? _vehicle;
-  bool? _approved;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final backend = context.read<AppState>().backend;
-    final v = await backend.myVehicle();
-    final approved = backend is SupabaseBackend
-        ? await backend.vehicleApproved()
-        : true;
-    if (mounted) {
-      setState(() {
-        _vehicle = v;
-        _approved = approved;
-      });
-    }
-  }
+class OwnerAccountTab extends StatelessWidget {
+  const OwnerAccountTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -353,87 +304,27 @@ class _DriverAccountTabState extends State<DriverAccountTab> {
               ),
             ],
           ),
-          SectionLabel(context.tr('your_vehicle')),
-          CardBox(
-            onTap: () async {
-              await Navigator.of(context).push(
-                MaterialPageRoute<Vehicle>(
-                  builder: (_) => VehicleScreen(initial: _vehicle),
-                ),
-              );
-              _load();
-            },
-            child: Row(
-              children: [
-                CarBadge(
-                  categoryId: _vehicle?.categoryId ?? 'standard',
-                  size: 48,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _vehicle?.title ?? context.tr('add_vehicle'),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      if (_vehicle != null) ...[
-                        const SizedBox(height: 4),
-                        Plate(_vehicle!.plate),
-                      ],
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded),
-              ],
-            ),
-          ),
-          if (_approved == false) ...[
-            const SizedBox(height: 10),
-            CardBox(
-              color: AppColors.primarySoft,
-              child: Row(
-                children: [
-                  const Icon(Icons.hourglass_top_rounded),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(context.tr('pending_approval'))),
-                ],
-              ),
-            ),
-          ],
           SectionLabel(context.tr('documents')),
           for (final doc in const [
-            'doc_license',
             'doc_registration',
-            'doc_taxi_permit',
             'doc_insurance',
+            'doc_id',
           ])
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: ProfileTile(
                 icon: Icons.description_outlined,
                 title: context.tr(doc),
-                subtitle: context.tr(
-                  _approved == true ? 'doc_verified' : 'doc_send_office',
-                ),
-                trailing: Icon(
-                  _approved == true
-                      ? Icons.check_circle_rounded
-                      : Icons.schedule_rounded,
-                  color: _approved == true
-                      ? AppColors.success
-                      : AppColors.inkFaint,
-                ),
+                subtitle: context.tr('doc_send_office'),
               ),
             ),
           SectionLabel(context.tr('settings')),
           const SettingsTiles(),
           const SizedBox(height: 8),
           ProfileTile(
-            icon: Icons.hail_rounded,
-            title: context.tr('switch_to_passenger'),
-            onTap: () => switchRole(context, UserRole.passenger),
+            icon: Icons.search_rounded,
+            title: context.tr('switch_to_renter'),
+            onTap: () => switchRole(context, UserRole.renter),
           ),
         ],
       ),

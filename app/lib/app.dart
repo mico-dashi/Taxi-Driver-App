@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/config.dart';
@@ -7,8 +8,8 @@ import 'core/theme.dart';
 import 'models/models.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/profile_setup_screen.dart';
-import 'screens/driver/driver_shell.dart';
-import 'screens/passenger/passenger_shell.dart';
+import 'screens/owner/owner_shell.dart';
+import 'screens/renter/renter_shell.dart';
 import 'state/app_state.dart';
 
 class TaxiApp extends StatelessWidget {
@@ -21,6 +22,9 @@ class TaxiApp extends StatelessWidget {
       title: AppConfig.brandName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      locale: Locale(lang),
+      supportedLocales: const [Locale('sq'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       builder: (context, child) => L10nScope(lang: lang, child: child!),
       home: const SplashScreen(),
     );
@@ -66,9 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
 Widget homeFor(UserProfile? user) {
   if (user == null) return const LoginScreen();
   if (user.name.trim().isEmpty) return const ProfileSetupScreen();
-  return user.role == UserRole.driver
-      ? const DriverShell()
-      : const PassengerShell();
+  return user.role == UserRole.owner ? const OwnerShell() : const RenterShell();
 }
 
 /// Replaces the whole navigation stack, e.g. after login or switching mode.
@@ -99,7 +101,7 @@ class BrandLogo extends StatelessWidget {
             borderRadius: BorderRadius.circular(size * 0.28),
           ),
           child: Icon(
-            Icons.local_taxi_rounded,
+            Icons.car_rental_rounded,
             color: AppColors.primary,
             size: size * 0.6,
           ),

@@ -1,70 +1,115 @@
 import '../models/models.dart';
 
-/// Default tariffs in Lekë. In live mode these are loaded from the
-/// `fare_settings` table so the operator can change prices without an update.
+/// Rental pricing in Lekë. Owners set their own daily price; categories only
+/// suggest a starting price. In live mode categories are loaded from the
+/// `car_categories` table.
 class Pricing {
-  static const defaults = <VehicleCategory>[
-    VehicleCategory(
-      id: 'standard',
-      nameKey: 'cat_standard',
-      baseFare: 300,
-      perKm: 100,
-      perMinute: 10,
-      minFare: 400,
-      seats: 4,
+  static const defaults = <CarCategory>[
+    CarCategory(
+      id: 'economy',
+      nameKey: 'cat_economy',
+      suggestedPerDay: 3000,
+      suggestedDeposit: 20000,
+      seats: 5,
     ),
-    VehicleCategory(
+    CarCategory(
+      id: 'suv',
+      nameKey: 'cat_suv',
+      suggestedPerDay: 5500,
+      suggestedDeposit: 40000,
+      seats: 5,
+    ),
+    CarCategory(
       id: 'luxury',
       nameKey: 'cat_luxury',
-      baseFare: 600,
-      perKm: 220,
-      perMinute: 20,
-      minFare: 1000,
-      seats: 4,
+      suggestedPerDay: 12000,
+      suggestedDeposit: 100000,
+      seats: 5,
     ),
-    VehicleCategory(
+    CarCategory(
       id: 'van',
       nameKey: 'cat_van',
-      baseFare: 500,
-      perKm: 160,
-      perMinute: 15,
-      minFare: 800,
-      seats: 7,
+      suggestedPerDay: 7000,
+      suggestedDeposit: 50000,
+      seats: 8,
     ),
   ];
 
-  /// Replaced with the server's `fare_settings` in live mode.
-  static List<VehicleCategory> categories = defaults;
+  static List<CarCategory> categories = defaults;
 
-  static VehicleCategory byId(String id) =>
+  static CarCategory byId(String id) =>
       categories.firstWhere((c) => c.id == id, orElse: () => categories.first);
 
-  /// 22:00–06:00 carries a 20% night surcharge, as is common in Albania.
-  static bool isNight(DateTime t) => t.hour >= 22 || t.hour < 6;
-  static const nightMultiplier = 1.2;
+  /// 7+ days get 10% off, 28+ days get 20% off, as rental agencies do.
+  static int discountPercent(int days) => days >= 28
+      ? 20
+      : days >= 7
+      ? 10
+      : 0;
 
-  /// Airport trips (to or from Rinas) have a fixed minimum.
-  static const airportMinFare = 2500;
+  /// A renter may offer less than the listed price, but not below 70%.
+  static const minOfferFraction = 0.7;
 
-  static int estimate(
-    VehicleCategory c,
-    double km,
-    double minutes, {
-    DateTime? at,
-    bool airport = false,
-    int discountPercent = 0,
+  static int minOffer(int listedPerDay) =>
+      roundDaily(listedPerDay * minOfferFraction);
+
+  static int roundDaily(num perDay) => ((perDay / 100).round() * 100).toInt();
+
+  static RentalQuote quote({
+    required int perDay,
+    required int days,
+    required int deposit,
+    int deliveryFee = 0,
+    int promoPercent = 0,
   }) {
-    var fare = c.baseFare + c.perKm * km + c.perMinute * minutes;
-    if (isNight(at ?? DateTime.now())) fare *= nightMultiplier;
-    if (fare < c.minFare) fare = c.minFare.toDouble();
-    if (airport && fare < airportMinFare) fare = airportMinFare.toDouble();
-    if (discountPercent > 0) fare = fare * (100 - discountPercent) / 100;
-    return roundFare(fare);
+    final base = perDay * days;
+    final longStay = discountPercent(days);
+    final afterLongStay = base * (100 - longStay) / 100;
+    final promo = afterLongStay * promoPercent / 100;
+    final rental = ((afterLongStay - promo) / 100).round() * 100;
+    return RentalQuote(
+      days: days,
+      perDay: perDay,
+      base: base,
+      longStayDiscount: (base - afterLongStay).round(),
+      promoDiscount: promo.round(),
+      deliveryFee: deliveryFee,
+      total: rental + deliveryFee,
+      deposit: deposit,
+    );
   }
 
-  /// Fares are rounded to the nearest 50 L so cash change is easy.
-  static int roundFare(num fare) => ((fare / 50).round() * 50).toInt();
+  static RentalQuote quoteFor(Booking b) => quote(
+    perDay: b.perDay,
+    days: b.days,
+    deposit: b.car.deposit,
+    deliveryFee: b.pickup == Pickup.delivery ? b.car.deliveryFee : 0,
+    promoPercent: b.promoPercent,
+  );
+}
 
-  /// Quick counter-offer steps a driver can tap.
-  static const counterSteps = [0, 100, 200, 500];
+class RentalQuote {
+  final int days;
+  final int perDay;
+  final int base;
+  final int longStayDiscount;
+  final int promoDiscount;
+  final int deliveryFee;
+
+  /// What the renter pays for the rental (deposit not included).
+  final int total;
+
+  /// Refundable deposit held at pickup.
+  final int deposit;
+
+  const RentalQuote({
+    required this.days,
+    required this.perDay,
+    required this.base,
+    required this.longStayDiscount,
+    required this.promoDiscount,
+    required this.deliveryFee,
+    required this.total,
+    required this.deposit,
+  });
 }

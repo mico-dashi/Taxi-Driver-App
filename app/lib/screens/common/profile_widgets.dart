@@ -10,12 +10,11 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
 import '../auth/login_screen.dart';
-import '../booking/payment_widgets.dart';
-import '../booking/where_to_sheet.dart';
-import '../ride/ride_screen.dart';
+import 'payment_widgets.dart';
+import 'where_to_sheet.dart';
 
-class ProfileTab extends StatelessWidget {
-  const ProfileTab({super.key});
+class RenterProfileTab extends StatelessWidget {
+  const RenterProfileTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +64,10 @@ class ProfileTab extends StatelessWidget {
           const SettingsTiles(),
           const SizedBox(height: 8),
           ProfileTile(
-            icon: Icons.local_taxi_outlined,
-            title: context.tr('become_driver'),
-            subtitle: context.tr('become_driver_desc'),
-            onTap: () => switchRole(context, UserRole.driver),
+            icon: Icons.car_rental_rounded,
+            title: context.tr('become_owner'),
+            subtitle: context.tr('become_owner_desc'),
+            onTap: () => switchRole(context, UserRole.owner),
           ),
         ],
       ),
@@ -320,3 +319,74 @@ class ProfileTile extends StatelessWidget {
     );
   }
 }
+
+/// Emergency numbers for Albania.
+Future<void> showSafetySheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        Widget tile(IconData icon, String label, String number, Color color) =>
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: color.withValues(alpha: 0.12),
+                child: Icon(icon, color: color),
+              ),
+              title: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(number),
+              trailing: const Icon(Icons.call_rounded),
+              onTap: () => launchUrl(Uri(scheme: 'tel', path: number)),
+            );
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 20, 12, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    ctx.tr('safety'),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                tile(
+                  Icons.sos_rounded,
+                  ctx.tr('emergency'),
+                  AppConfig.emergencyNumber,
+                  AppColors.danger,
+                ),
+                tile(
+                  Icons.local_police_outlined,
+                  ctx.tr('police'),
+                  AppConfig.policeNumber,
+                  AppColors.verified,
+                ),
+                tile(
+                  Icons.local_hospital_outlined,
+                  ctx.tr('ambulance'),
+                  AppConfig.ambulanceNumber,
+                  AppColors.success,
+                ),
+                tile(
+                  Icons.support_agent_rounded,
+                  ctx.tr('support'),
+                  AppConfig.supportPhone,
+                  AppColors.ink,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );

@@ -1,11 +1,11 @@
 {
-    "name": "Taksi AL",
-    "short_name": "Taksi AL",
+    "name": "Rent AL",
+    "short_name": "Rent AL",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFC21A",
     "theme_color": "#FFC21A",
-    "description": "Taksi e shpejtë kudo në Shqipëri",
+    "description": "Makina me qira kudo në Shqipëri",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

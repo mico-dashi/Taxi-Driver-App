@@ -1,110 +1,78 @@
-# Taksi AL: ride-hailing app for Albania 🇦🇱
+# Rent AL: car rental between people in Albania 🇦🇱
 
-A complete taxi app for Albania: a **passenger app** and a **driver app** in one codebase, plus a **backend** (database, security rules, real-time offers). It is based on the reference video and adapted for Albania:
-Albanian language (English too), prices in **Lek (L)**, cash payments, Albanian phone numbers (+355), Albanian number plates, cities and landmarks, and local emergency numbers.
+A peer-to-peer car rental app for Albania with **two modes in one app**:
 
-> **Shqip:** Aplikacion i plotë taksie për Shqipërinë: aplikacion për pasagjerët, aplikacion për shoferët dhe server. Çmimet janë në lekë, pagesa me para në dorë ose kartë, dhe shoferët bëjnë oferta si te inDrive. Mund ta provoni menjëherë në **modalitetin demo** (kodi SMS: `123456`).
+- **"Gjej makinë me qira" (Find a car to rent)**: search by place and dates, compare cars on a list or map, send a booking request, and **offer your own price** if you like.
+- **"Kam makinë për qira" (I have a car for rent)**: list your cars, receive requests, **accept, decline or counter-offer**, hand over the car and track your earnings.
 
----
+It comes with a **backend** (database, security rules, realtime updates) that makes sure a car can never be double-booked. Built for Albania: Albanian (and English), prices in **Lek (L)**, cash at pickup, Albanian phone numbers (+355) and plates, and cities from Tirana and Rinas airport to Durrës, Vlorë, Sarandë and Ksamil.
 
-## What's inside
+> **Shqip:** Aplikacion për makina me qira mes njerëzve. Qiramarrësi kërkon sipas vendit dhe datave dhe mund të ofrojë çmimin e vet; pronari e pranon, e refuzon ose bën kundërofertë. Provojeni menjëherë në **modalitetin demo** (kodi SMS: `123456`).
 
-### Passenger app (same flow as the video)
-| Screen | What it does |
-|---|---|
-| Login | Albanian mobile number (+355 6X…) and a 6-digit SMS code |
-| Home | Greeting, **"Where would you go?"**, Standard / Luxury / Van cards with the nearest car's ETA, a **30% first-ride promo** (`TAKSI30`), the list of available cars with driver, rating and price per km |
-| Where to? | Search (works offline with 37 popular Albanian places + online address search), current location, recent and saved places (Home/Work) |
-| **1. Route** | Map with the route, pickup/destination (tap to change, swap button), km and minutes |
-| **2. Payment** | Cash (default, since most Albanians pay cash), cards, Apple Pay / Google Pay |
-| **3. Car** | Choose Standard / Luxury / Van with the exact fare for this trip; **raise or lower your offer** (inDrive style) |
-| Finding driver | Radar animation, drivers found around you, **offers from drivers with a 15-second countdown**, Decline / Accept, "Looking for another driver…" |
-| Ride | "Ride confirmed" → **Driver on the way** (live car on the map, ETA, progress bar) → **Driver has arrived** → trip in progress. Call, chat, cancel with a reason, share trip, safety button (112 / 129 / 127) |
-| Trip complete | Fare summary, "pay the driver X L in cash", 5-star rating, tip, comment |
-| Bookings / Chat / Profile | Ride history with receipts, chat with the driver and WhatsApp support, payment methods, promo codes, saved places, language, "Become a driver" |
-
-### Driver app (what you sell to taxi drivers)
-- Register the vehicle (make, model, **Albanian plate**, service type)
-- **Go online / offline**; the driver's live GPS is shared with passengers
-- Incoming requests with pickup, destination, distance, the passenger's fare and payment type
-- **Accept at the passenger's price or counter-offer** (+100 / +200 / +500 L)
-- Navigate with **Google Maps or Waze**, then "I've arrived" → "Start trip" → "Complete trip" → "Collect X L in cash"
-- **Earnings** dashboard (today, last 7 days, trips), document checklist (licence, registration, municipality taxi licence, insurance)
-
-### Backend (Supabase: PostgreSQL + Auth + Realtime)
-- `supabase/migrations/…_init.sql`: tables, **row-level security** (passengers only see their own rides; a driver who lost the bid can't see the ride or the chat), and server functions:
-  - `accept_offer` is atomic: only one driver can win a ride
-  - `send_offer` rejects offers below the passenger's fare and offers from unapproved cars
-  - `update_ride_status` only allows valid steps (arrived → in progress → completed)
-  - `rate_ride` keeps the driver's average rating; `apply_promo` handles first-ride-only codes
-  - `nearby_drivers`, `driver_earnings` (Europe/Tirane time zone), `expire_stale_requests`
-- Drivers **cannot approve themselves** or change their own rating; an admin approves vehicles
-- Optional **monthly subscription** check for drivers (the business model, see below)
-
-### Albania-specific pricing (editable in the `fare_settings` table)
-| Type | Base | Per km | Per min | Minimum |
-|---|---|---|---|---|
-| Standard | 300 L | 100 L | 10 L | 400 L |
-| Luxury | 600 L | 220 L | 20 L | 1.000 L |
-| Van (7 seats) | 500 L | 160 L | 15 L | 800 L |
-
-Night tariff +20% (22:00–06:00), 2.500 L minimum for Rinas airport trips, and fares rounded to 50 L so cash change is easy.
+> The app started as a taxi app (inDrive-style offers). That version is kept in the Git history at commit `30c064e`.
 
 ---
+
+## How it works
+
+**Renter**
+1. **Search**: choose where and when (pick-up and return day and hour), filter by Economy / SUV / Luxury / Van, sort by distance or price, switch between **list and map** (price pins).
+2. **Car page**: specs (gearbox, fuel, seats, km per day), the owner and their rating, where the car is parked (map + directions), rental terms (deposit, minimum days, fuel policy), and the full price for your dates.
+3. **Book in 3 steps: Dates → Payment → Offer**. Pick it up yourself or have it delivered (if the owner offers delivery), pay by cash or card, and offer the listed price or less (down to 70%).
+4. **Answer**: the owner accepts, declines or sends a **counter-offer** that you can accept with one tap.
+5. **Handover and return**: "I picked up the car" → "I returned the car" → review the car and owner. Chat and call the owner at any time.
+
+**Owner**
+1. **Add a car**: make, model, year, Albanian plate, colour, type, gearbox, fuel, seats, price per day (with a suggestion), deposit, minimum days, km per day, location, optional delivery with a fee, and a description. Hide or show it any time.
+2. **Requests inbox**: see who asks, the dates, their offer against your price, the total, payment method and message. **Accept / Counter / Decline** straight from the card.
+3. **Handovers and returns**: upcoming handovers, cars rented out now, history.
+4. **Earnings**: this month, days rented, average per day, all time.
+
+**Pricing** (same formula in the app and on the server): price per day × days, **−10% for 7+ days, −20% for 28+ days**, the first-rental promo **QIRA20** (−20%), plus delivery, rounded to 100 L. The deposit is shown separately and refunded at return.
 
 ## Try it now (demo mode)
 
-Demo mode needs **no server and no accounts**. Drivers, offers and the car moving on the map are all simulated on the phone, so you can show the app to taxi drivers anywhere. Log in with any Albanian number and the code **123456**. Pick "I drive a taxi" to see the driver app.
+Demo mode needs **no server**. It includes 15 cars with owners in Tirana, Rinas, Durrës, Vlorë, Sarandë and Ksamil. Simulated owners answer your requests (accept, or counter-offer when you offer less), and in owner mode simulated renters send requests for your cars. Log in with any Albanian number and the code **123456**.
 
 ```bash
 cd app
 flutter pub get
-flutter run            # Android phone / emulator, iPhone, or: flutter run -d chrome
+flutter run            # Android / iPhone, or: flutter run -d chrome
 ```
 
-**In the browser, with the real map:** the *Web demo (GitHub Pages)* workflow publishes the app to **https://mico-dashi.github.io/Taxi-Driver-App/**. It shows real OpenStreetMap streets and real driving routes. One-time setup: repository **Settings → Pages → Source: GitHub Actions**. It then updates on every change to `main` (or run it by hand from the Actions tab).
-
-**Without a computer:** every push to GitHub runs the **CI** workflow (`.github/workflows/ci.yml`). It tests everything and builds an **Android APK** (and a web version). Open the repository's **Actions** tab → latest run → *Artifacts* → download `taksi-al-android` and install `app-release.apk` on any Android phone.
+**Without a computer:** the **CI** workflow tests everything and builds an **Android APK** (Actions tab → latest run → *Artifacts* → `rent-al-android`). The **Web demo (GitHub Pages)** workflow publishes the web app with the real map at **https://mico-dashi.github.io/Taxi-Driver-App/**. One-time setup: **Settings → Pages → Source: GitHub Actions**; it updates on every change to `main`.
 
 ## Go live
 
-See **[docs/GOING_LIVE.md](docs/GOING_LIVE.md)** for step-by-step instructions: create the Supabase project, SMS login for +355 numbers, map provider, approving drivers, publishing to Google Play / App Store, payments, and the legal checklist for Albania.
+See **[docs/GOING_LIVE.md](docs/GOING_LIVE.md)**: backend setup, SMS login, approving cars, insurance and legal points for renting cars in Albania, payments, and publishing to the stores.
 
-In short:
-```bash
-flutter build apk --release \
-  --dart-define=SUPABASE_URL=https://YOUR-PROJECT.supabase.co \
-  --dart-define=SUPABASE_KEY=sb_publishable_...
-```
+## Re-branding
 
-## Re-branding for another company
-
-Change `app/lib/core/config.dart` (name, tagline, support phone/email, promo code, emergency numbers, map/routing servers) and the colours in `app/lib/core/theme.dart`. All text is in `app/lib/core/strings.dart` (Albanian + English). Replace the launcher icons in `app/android/app/src/main/res/mipmap-*` and `app/ios/Runner/Assets.xcassets`.
+`app/lib/core/config.dart` holds the name, tagline, support contacts, promo code, search radius and map server; `app/lib/core/theme.dart` the colours; `app/lib/core/strings.dart` all texts in Albanian and English. Replace the launcher icons in `app/android/app/src/main/res/mipmap-*` and `app/ios/Runner/Assets.xcassets`.
 
 ## Project structure
 
 ```
 app/                         Flutter app (Android, iOS, web)
   lib/core/                  config, theme, translations, Albanian places, formatting
-  lib/models/                data types (ride, offer, driver…)
+  lib/models/                cars, bookings, users
   lib/services/              backend interface, demo simulator, Supabase backend,
-                             routing (OSRM), geocoding (Nominatim), GPS, pricing
-  lib/screens/auth/          login, SMS code, profile setup
-  lib/screens/passenger/     home, bookings, chat, profile
-  lib/screens/booking/       where-to search, Route → Payment → Car
-  lib/screens/ride/          finding driver + offers, live ride, trip complete
-  lib/screens/driver/        drive (online/requests/active ride), earnings, vehicle
-  test/                      unit, simulated end-to-end and UI tests
+                             pricing, address search, GPS
+  lib/screens/auth/          login, SMS code, choose mode
+  lib/screens/renter/        home & search, results (list/map), car page, booking steps, my rentals
+  lib/screens/owner/         requests inbox, my cars, add/edit car, earnings, account
+  lib/screens/common/        booking status page (both sides), chats, payment, places, profile
+  test/                      unit, simulated booking flows and UI tests
 supabase/
-  migrations/                database schema + security + server functions
-  seed.sql                   tariffs and the TAKSI30 promo code
-  tests/                     end-to-end SQL test of the whole booking flow
+  migrations/                schema, security rules and booking functions
+  seed.sql                   car categories and the QIRA20 promo
+  tests/                     end-to-end SQL test of the rental flow
 docs/GOING_LIVE.md           launch guide for Albania
 ```
 
 ## Tests
 
 ```bash
-cd app && flutter analyze && flutter test          # 23 tests
-PGHOST=... PGUSER=... ./supabase/tests/run_local.sh # full booking flow on PostgreSQL
+cd app && flutter analyze && flutter test          # 20 tests
+PGHOST=... PGUSER=... ./supabase/tests/run_local.sh # rental flow on PostgreSQL
 ```

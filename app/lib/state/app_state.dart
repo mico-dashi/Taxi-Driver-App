@@ -9,22 +9,18 @@ import '../models/models.dart';
 import '../services/backend.dart';
 import '../services/geocoding_service.dart';
 import '../services/location_service.dart';
-import '../services/routing_service.dart';
 
 /// App-wide state: who is logged in, language, where the user is, saved
 /// payment methods and recent places.
 class AppState extends ChangeNotifier {
   AppState({
     required this.backend,
-    RoutingService? routing,
     GeocodingService? geocoding,
     LocationService? location,
-  }) : routing = routing ?? RoutingService(),
-       geocoding = geocoding ?? GeocodingService(),
+  }) : geocoding = geocoding ?? GeocodingService(),
        location = location ?? LocationService();
 
   final Backend backend;
-  final RoutingService routing;
   final GeocodingService geocoding;
   final LocationService location;
 
@@ -45,7 +41,30 @@ class AppState extends ChangeNotifier {
     orElse: () => PaymentMethod.cash,
   );
 
-  bool get isDriver => user?.role == UserRole.driver;
+  bool get isOwner => user?.role == UserRole.owner;
+
+  /// The renter's current search: where and when they need a car.
+  Place? searchPlace;
+  late DateTime searchStart = _defaultStart();
+  late DateTime searchEnd = searchStart.add(const Duration(days: 3));
+
+  static DateTime _defaultStart() {
+    final t = DateTime.now().add(const Duration(days: 1));
+    return DateTime(t.year, t.month, t.day, AppConfig.defaultPickupHour);
+  }
+
+  Place get effectiveSearchPlace =>
+      searchPlace ?? herePlace ?? Place('Tiranë', '', here);
+
+  void setSearch({Place? place, DateTime? start, DateTime? end}) {
+    if (place != null) searchPlace = place;
+    if (start != null) searchStart = start;
+    if (end != null) searchEnd = end;
+    if (!searchEnd.isAfter(searchStart)) {
+      searchEnd = searchStart.add(const Duration(days: 1));
+    }
+    notifyListeners();
+  }
 
   static const _kLang = 'lang';
   static const _kRecents = 'recents';

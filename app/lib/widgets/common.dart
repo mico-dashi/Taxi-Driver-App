@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
+import 'map_widgets.dart';
 
 /// Initials avatar (no photos needed; works offline).
 class Avatar extends StatelessWidget {
@@ -51,38 +52,38 @@ class Avatar extends StatelessWidget {
 IconData categoryIcon(String categoryId) => switch (categoryId) {
   'luxury' => Icons.workspace_premium_rounded,
   'van' => Icons.airport_shuttle_rounded,
-  _ => Icons.local_taxi_rounded,
+  'suv' => Icons.terrain_rounded,
+  _ => Icons.directions_car_filled_rounded,
 };
 
-/// A stylised car tile used wherever the video shows a car photo.
+/// The car's "photo": a drawing of the car in its own colour, lying on a
+/// soft tile. Owners can add real photos later (see docs/GOING_LIVE.md).
 class CarBadge extends StatelessWidget {
-  const CarBadge({super.key, required this.categoryId, this.size = 56});
+  const CarBadge({super.key, required this.color, this.size = 56});
 
-  final String categoryId;
+  CarBadge.of(Car car, {super.key, this.size = 56})
+    : color = Color(car.colorValue);
+
+  final Color color;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final luxury = categoryId == 'luxury';
     return Container(
-      width: size * 1.4,
+      width: size * 1.5,
       height: size,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: luxury
-              ? const [Color(0xFF2B2D33), Color(0xFF4A4D57)]
-              : const [AppColors.primarySoft, Color(0xFFFFE08A)],
+          colors: [Color(0xFFF1F3F6), Color(0xFFE2E6EC)],
         ),
-        borderRadius: BorderRadius.circular(size * 0.25),
+        borderRadius: BorderRadius.circular(size * 0.22),
       ),
-      child: Icon(
-        categoryId == 'van'
-            ? Icons.airport_shuttle_rounded
-            : Icons.directions_car_filled_rounded,
-        size: size * 0.62,
-        color: luxury ? AppColors.primary : AppColors.ink,
+      alignment: Alignment.center,
+      child: RotatedBox(
+        quarterTurns: 1,
+        child: CarTopView(color: color, size: size * 1.12),
       ),
     );
   }
@@ -189,12 +190,16 @@ class Plate extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
         ],
@@ -423,20 +428,21 @@ class RouteSummary extends StatelessWidget {
   );
 }
 
-/// Route / Payment / Car progress header from the video.
+/// Step progress header (e.g. Dates / Payment / Offer).
 class StepHeader extends StatelessWidget {
-  const StepHeader({super.key, required this.step, required this.onBack});
+  const StepHeader({
+    super.key,
+    required this.step,
+    required this.labels,
+    required this.onBack,
+  });
 
   final int step;
+  final List<String> labels;
   final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final labels = [
-      context.tr('step_route'),
-      context.tr('step_payment'),
-      context.tr('step_car'),
-    ];
     return Row(
       children: [
         CircleIconButton(icon: Icons.chevron_left_rounded, onTap: onBack),
@@ -454,7 +460,7 @@ class StepHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                for (var i = 0; i < 3; i++) ...[
+                for (var i = 0; i < labels.length; i++) ...[
                   if (i > 0)
                     Expanded(
                       child: Container(

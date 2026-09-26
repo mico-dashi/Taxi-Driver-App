@@ -3,10 +3,11 @@ import 'package:latlong2/latlong.dart';
 import '../models/models.dart';
 
 /// Everything the app needs from a server. Two implementations:
-///  * [DemoBackend]     - simulated drivers/passengers, runs fully offline.
-///  * [SupabaseBackend] - real accounts, realtime offers, live driver GPS.
+///  * [DemoBackend]     - simulated owners and renters, runs fully offline.
+///  * [SupabaseBackend] - real accounts, realtime bookings and chat.
 abstract class Backend {
   bool get isDemo;
+  String get currentUserId;
 
   // ---------------------------------------------------------------- auth
   Future<UserProfile?> restoreSession();
@@ -20,59 +21,69 @@ abstract class Backend {
   });
   Future<void> signOut();
 
-  // ----------------------------------------------------------- passenger
-  /// Online drivers around [around], refreshed continuously.
-  Stream<List<Driver>> watchNearbyDrivers(LatLng around);
+  // -------------------------------------------------------------- renter
+  /// Listed cars near [near] that are free for the whole period.
+  Future<List<Car>> searchCars({
+    required LatLng near,
+    required DateTime start,
+    required DateTime end,
+    String? categoryId,
+  });
 
-  Future<RideRequest> createRequest({
-    required Place pickup,
-    required Place destination,
-    required RouteInfo route,
-    required String categoryId,
-    required int offeredFare,
+  /// Sends a booking request. [offeredPerDay] may be below the listed price
+  /// (the owner can accept, decline or counter).
+  Future<Booking> requestBooking({
+    required Car car,
+    required DateTime start,
+    required DateTime end,
+    required int offeredPerDay,
+    required Pickup pickup,
     required PaymentType payment,
+    String deliveryAddress = '',
+    String note = '',
+    String promoCode = '',
   });
 
-  /// Pending offers from drivers for this request.
-  Stream<List<RideOffer>> watchOffers(String requestId);
-  Future<void> declineOffer(RideOffer offer);
-  Future<Ride> acceptOffer(RideOffer offer);
-  Future<void> cancelRequest(String requestId);
-
-  Stream<Ride> watchRide(String rideId);
-  Future<void> cancelRide(String rideId, String reason);
-  Future<void> rateRide(
-    String rideId, {
-    required int stars,
-    int tip = 0,
-    String comment = '',
-  });
+  /// Renter accepts the owner's counter-offer.
+  Future<void> acceptCounter(String bookingId);
 
   /// Discount percent for a promo code (0 when invalid / already used).
   Future<int> promoDiscount(String code);
 
-  /// Ride still in progress (e.g. after the app was closed), if any.
-  Future<Ride?> activeRide();
-  Future<List<Ride>> rideHistory();
+  // ------------------------------------------------------------- shared
+  Stream<Booking> watchBooking(String bookingId);
 
-  Stream<List<ChatMessage>> watchMessages(String rideId);
-  Future<void> sendMessage(String rideId, String text);
-  String get currentUserId;
+  /// Bookings where I am the renter (newest first).
+  Future<List<Booking>> myRentals();
+  Future<void> cancelBooking(String bookingId, String reason);
 
-  // -------------------------------------------------------------- driver
-  Future<Vehicle?> myVehicle();
-  Future<void> saveVehicle(Vehicle vehicle);
-  Future<void> setOnline(bool online, LatLng location);
-  Future<void> pushLocation(LatLng location, double heading);
+  /// Handover done: the renter has the car.
+  Future<void> markPickedUp(String bookingId);
 
-  /// Open ride requests near the driver that match their vehicle category.
-  Stream<List<RideRequest>> watchIncomingRequests(LatLng around);
-  Future<void> sendOffer(RideRequest request, int price, int etaMinutes);
+  /// The car is back with the owner.
+  Future<void> markReturned(String bookingId);
+  Future<void> rateBooking(
+    String bookingId, {
+    required int stars,
+    String comment = '',
+  });
 
-  /// Emits the ride once a passenger accepts this driver's offer.
-  Stream<Ride?> watchDriverActiveRide();
-  Future<void> updateRideStatus(String rideId, RideStatus status);
-  Future<DriverEarnings> earnings();
+  Stream<List<ChatMessage>> watchMessages(String bookingId);
+  Future<void> sendMessage(String bookingId, String text);
+
+  // --------------------------------------------------------------- owner
+  Future<List<Car>> myCars();
+
+  /// Creates (empty id) or updates a car listing; returns the saved car.
+  Future<Car> saveCar(Car car);
+  Future<void> setListed(String carId, bool listed);
+
+  /// All bookings for my cars, kept up to date.
+  Stream<List<Booking>> watchOwnerBookings();
+  Future<void> acceptBooking(String bookingId);
+  Future<void> declineBooking(String bookingId);
+  Future<void> counterBooking(String bookingId, int perDay);
+  Future<OwnerEarnings> earnings();
 
   void dispose() {}
 }

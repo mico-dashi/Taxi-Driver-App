@@ -1,12 +1,15 @@
--- Default tariffs in Lekë (ALL). Change them any time; the app reads this table.
-insert into public.fare_settings (category_id, name, base_fare, per_km, per_minute, min_fare, seats) values
-  ('standard', 'Standard', 300, 100, 10, 400, 4),
-  ('luxury',   'Luxury',   600, 220, 20, 1000, 4),
-  ('van',      'Van',      500, 160, 15, 800, 7)
-on conflict (category_id) do update set
-  base_fare = excluded.base_fare, per_km = excluded.per_km, per_minute = excluded.per_minute,
-  min_fare = excluded.min_fare, seats = excluded.seats;
+-- Car categories with suggested prices in Lekë (ALL). Owners set their own
+-- price per day; these are only the defaults shown when listing a car.
+insert into public.car_categories (id, name, suggested_per_day, suggested_deposit, seats) values
+  ('economy', 'Economy', 3000, 20000, 5),
+  ('suv',     'SUV',     5500, 40000, 5),
+  ('luxury',  'Luxury', 12000, 100000, 5),
+  ('van',     'Van',     7000, 50000, 8)
+on conflict (id) do update set
+  suggested_per_day = excluded.suggested_per_day,
+  suggested_deposit = excluded.suggested_deposit,
+  seats = excluded.seats;
 
-insert into public.promo_codes (code, percent, first_ride_only) values
-  ('TAKSI30', 30, true)
+insert into public.promo_codes (code, percent, first_rental_only) values
+  ('QIRA20', 20, true)
 on conflict (code) do nothing;

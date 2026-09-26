@@ -70,7 +70,7 @@ jobs:
           --dart-define=SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
       - uses: actions/upload-artifact@v4
         with:
-          name: taksi-al-android
+          name: rent-al-android
           path: app/build/app/outputs/flutter-apk/app-release.apk
 
   web:
@@ -89,5 +89,5 @@ jobs:
       - run: flutter build web --release
       - uses: actions/upload-artifact@v4
         with:
-          name: taksi-al-web
+          name: rent-al-web
           path: app/build/web

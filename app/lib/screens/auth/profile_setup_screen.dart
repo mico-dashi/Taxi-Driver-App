@@ -18,7 +18,7 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _name = TextEditingController();
-  UserRole _role = UserRole.passenger;
+  UserRole _role = UserRole.renter;
   bool _loading = false;
 
   @override
@@ -72,19 +72,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ),
             SectionLabel(context.tr('how_use_app')),
             _RoleCard(
-              icon: Icons.hail_rounded,
-              title: context.tr('role_passenger'),
-              subtitle: context.tr('role_passenger_desc'),
-              selected: _role == UserRole.passenger,
-              onTap: () => setState(() => _role = UserRole.passenger),
+              icon: Icons.search_rounded,
+              title: context.tr('role_renter'),
+              subtitle: context.tr('role_renter_desc'),
+              selected: _role == UserRole.renter,
+              onTap: () => setState(() => _role = UserRole.renter),
             ),
             const SizedBox(height: 12),
             _RoleCard(
-              icon: Icons.local_taxi_rounded,
-              title: context.tr('role_driver'),
-              subtitle: context.tr('role_driver_desc'),
-              selected: _role == UserRole.driver,
-              onTap: () => setState(() => _role = UserRole.driver),
+              icon: Icons.car_rental_rounded,
+              title: context.tr('role_owner'),
+              subtitle: context.tr('role_owner_desc'),
+              selected: _role == UserRole.owner,
+              onTap: () => setState(() => _role = UserRole.owner),
             ),
             const SizedBox(height: 28),
             ElevatedButton(

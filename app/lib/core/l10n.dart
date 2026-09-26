@@ -38,3 +38,53 @@ extension L10nContext on BuildContext {
     return t == key ? translate(lang, 'err_generic') : t;
   }
 }
+
+const _months = {
+  'sq': [
+    'Jan',
+    'Shk',
+    'Mar',
+    'Pri',
+    'Maj',
+    'Qer',
+    'Kor',
+    'Gus',
+    'Sht',
+    'Tet',
+    'Nën',
+    'Dhj',
+  ],
+  'en': [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ],
+};
+const _weekdays = {
+  'sq': ['Hën', 'Mar', 'Mër', 'Enj', 'Pre', 'Sht', 'Die'],
+  'en': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+};
+
+extension DateLabels on BuildContext {
+  /// "Pre 3 Tet" / "Fri 3 Oct".
+  String day(DateTime t) {
+    final l = _months.containsKey(lang) ? lang : 'en';
+    return '${_weekdays[l]![t.weekday - 1]} ${t.day} ${_months[l]![t.month - 1]}';
+  }
+
+  /// "Pre 3 Tet, 10:00".
+  String dayTime(DateTime t) =>
+      '${day(t)}, ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  /// "3 – 6 Tet" style range for compact cards.
+  String dayRange(DateTime a, DateTime b) => '${day(a)} → ${day(b)}';
+}

@@ -1,6 +1,6 @@
 # Going live in Albania
 
-The app works out of the box in **demo mode**. To take real rides you need a backend, SMS login, a map provider and store accounts. Follow these steps in order.
+The app works out of the box in **demo mode**. To take real bookings you need a backend, SMS login, a map provider and store accounts, and you must settle the insurance and legal questions below **before** the first real rental.
 
 ## 1. Backend (Supabase), about 15 minutes
 
@@ -9,13 +9,13 @@ The app works out of the box in **demo mode**. To take real rides you need a bac
    ```bash
    supabase init            # only if the CLI asks for it; keep the existing files
    supabase link --project-ref YOUR_PROJECT_REF
-   supabase db push                      # creates tables, security rules, functions
-   psql "$DATABASE_URL" -f supabase/seed.sql   # tariffs + TAKSI30 promo
+   supabase db push                              # tables, security rules, booking functions
+   psql "$DATABASE_URL" -f supabase/seed.sql     # car categories + QIRA20 promo
    ```
    (Or paste both files into the dashboard's **SQL Editor** and run them.)
-3. Enable **pg_cron** (Database → Extensions) and schedule the clean-up job:
+3. Enable **pg_cron** (Database → Extensions) and schedule the clean-up of unanswered requests:
    ```sql
-   select cron.schedule('expire-requests', '* * * * *', 'select public.expire_stale_requests()');
+   select cron.schedule('expire-requests', '*/15 * * * *', 'select public.expire_stale_requests()');
    ```
 4. Copy the **Project URL** and **publishable key** (Settings → API) and build the app with them:
    ```bash
@@ -23,81 +23,64 @@ The app works out of the box in **demo mode**. To take real rides you need a bac
    ```
    To have GitHub build it for you, add both as repository secrets named `SUPABASE_URL` and `SUPABASE_KEY`.
 
+What the server guarantees:
+- **No double bookings.** The database refuses a second confirmed booking that overlaps an existing one for the same car, even if two owners' taps arrive at the same moment.
+- Renters cannot offer below 70% of the listed price (change `min_offer_percent` in `app_settings`), or book shorter than the owner's minimum.
+- Only the two people in a booking can see it and its chat. Owners cannot approve their own cars or change their ratings.
+- Unanswered requests expire after 24 hours (`request_ttl_hours`).
+
 ## 2. SMS login for +355 numbers
 
-Supabase → Authentication → Providers → **Phone**: enable it and connect an SMS provider that delivers to Albanian numbers (Twilio, Vonage or MessageBird). Budget roughly €0.05–0.10 per SMS.
-For testing without sending SMS, add test numbers with a fixed code under *Phone → Test OTPs*.
+Supabase → Authentication → Providers → **Phone**: enable it and connect an SMS provider that delivers to Albanian numbers (Twilio, Vonage or MessageBird). Budget roughly €0.05–0.10 per SMS. For testing without sending SMS, add test numbers with a fixed code under *Phone → Test OTPs*.
 
-## 3. Approving drivers
+## 3. Approving cars and renters
 
-Drivers register in the app, but **cannot receive rides until you approve them**. Check their documents (driving licence, vehicle registration, municipality taxi licence, insurance), then run in the SQL Editor:
+New cars are **hidden until you approve them**. Check the registration (leja e qarkullimit), insurance and the owner's ID, then run:
 ```sql
-update vehicles set approved = true where plate = 'AA 482 TR';
+update cars set approved = true where plate = 'AA 482 TR';
 ```
-To block someone: `update profiles set is_blocked = true where phone = '+35569…';`
+Renters should show a valid driving licence at handover (the app reminds both sides). You can mark verified licences with `update profiles set licence_verified = true where phone = '+35569…';`, and block someone with `update profiles set is_blocked = true where phone = '+35569…';`.
 
-## 4. Business model: selling to drivers
+## 4. Insurance and legal checklist (read this first)
 
-The database supports a **monthly subscription** per driver (the app tells drivers "no commission, every lek is yours"):
-```sql
--- turn the requirement on
-update app_settings set require_driver_subscription = true;
--- a driver paid for a month
-insert into driver_subscriptions (driver_id, valid_until)
-select id, now() + interval '30 days' from profiles where phone = '+35569…'
-on conflict (driver_id) do update set valid_until = excluded.valid_until;
-```
-Drivers without an active subscription get "Your subscription has expired" when they try to send an offer. Collect the fee in cash, by bank transfer, or later through a payment provider.
+Not legal advice. Discuss these with an Albanian lawyer, an insurer and an accountant before launch:
+- **Insurance.** A standard Albanian motor policy (TPL) often does **not** cover renting a private car to strangers. You need either a partner insurer offering per-rental cover, or to work only with owners whose cars are insured for rental. This is the most important decision for a peer-to-peer rental business.
+- **Licensing.** Commercial car rental (rent-a-car) may require a business licence and vehicles registered for rental use. Clarify whether private owners can rent through the platform, or whether you start with licensed rent-a-car businesses and small fleets (the app works for both).
+- **Company and taxes.** A company registered with QKB (NIPT). Rental income must be declared, and **fiscal receipts** (fiscalisation) are required for payments. Decide whether owners issue them or the platform does.
+- **Contract.** A short rental agreement accepted by both sides for every booking: deposit, fuel, damage, fines, late return and cancellation rules.
+- **Personal data.** Register with the Information and Data Protection Commissioner (IDP) and publish a privacy policy (phone numbers, ID/licence checks, locations, booking history).
 
-Change prices any time without updating the app:
-```sql
-update fare_settings set per_km = 110 where category_id = 'standard';
-```
+## 5. Business model
 
-## 5. Maps, routing and address search
+Pick one (or combine them), all supported by the data model:
+- **Monthly subscription for owners**: turn it on with `update app_settings set require_owner_subscription = true;` and record payments in `owner_subscriptions`. Cars of owners without an active subscription stop receiving requests.
+- **Commission per booking**: the confirmed `total` of every booking is stored, so a commission (e.g. 10–15%) can be invoiced monthly from the `bookings` table.
 
-The defaults use free public OpenStreetMap servers. They are fine for testing, but their usage policies **do not allow a commercial app with many users**. Before launch, pick one:
+## 6. Maps and address search
 
-| Service | Option | Pass it with |
-|---|---|---|
-| Map tiles | MapTiler, Stadia Maps, or Thunderforest (free tiers available) | `--dart-define=TILE_URL=https://…/{z}/{x}/{y}.png?key=…` |
-| Routing | Self-hosted OSRM with the Albania extract from Geofabrik (a small €5/month server is enough) | `--dart-define=ROUTING_URL=https://your-osrm` |
-| Address search | Self-hosted Nominatim, or a paid geocoder with a compatible API | `--dart-define=GEOCODING_URL=https://…` |
+The defaults use free public OpenStreetMap servers. They are fine for testing, but their usage policies **do not allow a commercial app with many users**. Before launch, use a tile provider (MapTiler, Stadia Maps, Thunderforest) with `--dart-define=TILE_URL=https://…/{z}/{x}/{y}.png?key=…`, and a geocoder (self-hosted Nominatim or a compatible paid one) with `--dart-define=GEOCODING_URL=…`. Without search, the app still works with its built-in list of Albanian places.
 
-If routing or search is unreachable, the app still works: it estimates routes and uses its built-in list of Albanian places.
+## 7. Card payments and deposits
 
-## 6. Card, Apple Pay and Google Pay payments
+Cash at pickup works everywhere and is the default. In live mode, card and wallet options stay hidden until you connect a payment provider (**POK**, or the e-commerce gateway of **Raiffeisen, BKT, Credins or OTP**; Stripe needs a company in a supported country). With a provider you can also **pre-authorise the deposit** on the renter's card instead of taking cash. Then build with `--dart-define=CARD_PAYMENTS=true`.
 
-Cash works everywhere and is the default. In live mode, card and wallet options stay hidden until you connect a payment provider, because charging cards needs a merchant account. Options for an Albanian business:
-- **POK** (Albanian payment app/API), or the e-commerce gateway of **Raiffeisen, BKT, Credins or OTP** bank
-- **Stripe**, which requires a company registered in a supported country (Albania is not supported directly)
+## 8. Car photos
 
-Once integrated, build with `--dart-define=CARD_PAYMENTS=true`. The card form only keeps brand and last 4 digits. The full card number must go to the provider's SDK (tokenisation), never to your server.
+Cars are shown as drawings in their own colour. Real photos are the next step: store them in Supabase Storage (a `car-photos` bucket) and add an image URL list to the `cars` table.
 
-## 7. Legal checklist (Albania)
-
-Not legal advice. Check these with an Albanian lawyer or accountant:
-- **Company** registered with QKB (NIPT) to sell subscriptions and sign contracts with drivers.
-- **Fiscalisation**: taxi rides must be fiscalised (e-invoice / fiscal receipt through the tax authority's system). Decide whether drivers issue receipts with their own fiscal devices or whether the platform integrates fiscalisation.
-- **Taxi licences** come from each municipality (Bashkia). Only accept drivers with a valid licence (the app's document checklist covers this).
-- **Personal data**: register with the Information and Data Protection Commissioner (IDP), publish a privacy policy (phone numbers, GPS locations, ride history), and state how long data is kept.
-- **Terms of use** for passengers and a **driver agreement** (subscription, cancellations, behaviour, insurance).
-
-## 8. Publishing the apps
+## 9. Publishing the apps
 
 | Store | Cost | Notes |
 |---|---|---|
-| Google Play | $25 once | Create a release signing key (`keytool`), configure `android/app/build.gradle.kts` signing, upload `flutter build appbundle`. Declare location usage in the Play Console. |
-| Apple App Store | $99 / year | Needs a Mac with Xcode. Set the bundle ID and team in Xcode, then `flutter build ipa`. The location usage text (Albanian + English) is already in `Info.plist`. |
+| Google Play | $25 once | Create a release signing key (`keytool`), configure `android/app/build.gradle.kts` signing, upload `flutter build appbundle`. |
+| Apple App Store | $99 / year | Needs a Mac with Xcode. Set the team in Xcode, then `flutter build ipa`. |
 
-Also replace the default Flutter launcher icon with your logo (e.g. with the `flutter_launcher_icons` package).
-
-## 9. Before the first real ride
+## 10. Before the first real rental
 
 - [ ] Supabase project with migration + seed applied, pg_cron job scheduled
 - [ ] SMS provider working for +355 numbers
-- [ ] Map tiles / routing / search provider configured
+- [ ] Insurance solution agreed, rental agreement text ready
+- [ ] Map tiles / search provider configured
 - [ ] Support phone and email set in `app/lib/core/config.dart`
-- [ ] At least a few approved drivers online in the launch city
-- [ ] Privacy policy and terms published, company and fiscal questions settled
-- [ ] Test a full ride with two phones: one passenger account, one driver account
+- [ ] First cars approved, privacy policy and terms published
+- [ ] A full rental tested with two phones: one renter account, one owner account

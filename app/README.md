@@ -1,6 +1,6 @@
-# Taksi AL: Flutter app
+# Rent AL: Flutter app
 
-Passenger + driver app. See the [main README](../README.md) for features and setup.
+Car rental app: renters and owners. See the [main README](../README.md) for features and setup.
 
 ```bash
 flutter pub get

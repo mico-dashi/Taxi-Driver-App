@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Vendndodhja përdoret për t'ju marrë te pika e duhur dhe për t'u treguar pasagjerëve ku ndodhet taksia. / Your location is used to pick you up at the right place and to show passengers where the taxi is.</string>
+	<string>Vendndodhja përdoret për t'ju treguar makinat me qira afër jush. / Your location is used to show rental cars near you.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tel</string>
@@ -16,7 +16,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Taksi AL</string>
+	<string>Rent AL</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

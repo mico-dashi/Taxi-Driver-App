@@ -9,16 +9,16 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
 
-/// In-ride chat between passenger and driver (realtime in live mode).
+/// Chat between renter and owner about one booking (realtime in live mode).
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,
-    required this.rideId,
+    required this.bookingId,
     required this.peerName,
     this.peerPhone = '',
   });
 
-  final String rideId;
+  final String bookingId;
   final String peerName;
   final String peerPhone;
 
@@ -32,7 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late final Stream<List<ChatMessage>> _messages = context
       .read<AppState>()
       .backend
-      .watchMessages(widget.rideId);
+      .watchMessages(widget.bookingId);
 
   static const _quick = [
     'quick_coming',
@@ -53,7 +53,10 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     _text.clear();
     try {
-      await context.read<AppState>().backend.sendMessage(widget.rideId, text);
+      await context.read<AppState>().backend.sendMessage(
+        widget.bookingId,
+        text,
+      );
     } catch (e) {
       if (mounted) showError(context, e);
     }

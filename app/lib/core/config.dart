@@ -12,8 +12,8 @@ import 'package:latlong2/latlong.dart';
 /// offer and ride is simulated on the device, which is perfect for showing the
 /// product to taxi drivers and companies.
 class AppConfig {
-  static const brandName = 'Taksi AL';
-  static const brandTagline = 'Taksi e shpejtë, kudo në Shqipëri';
+  static const brandName = 'Rent AL';
+  static const brandTagline = 'Makina me qira, kudo në Shqipëri';
 
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 
@@ -34,14 +34,7 @@ class AppConfig {
     'TILE_URL',
     defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   );
-  static const userAgentPackage = 'al.taksi.taksi_al';
-
-  /// Routing (OSRM compatible). Self-host OSRM with the Albania extract from
-  /// Geofabrik for production.
-  static const routingUrl = String.fromEnvironment(
-    'ROUTING_URL',
-    defaultValue: 'https://router.project-osrm.org',
-  );
+  static const userAgentPackage = 'al.rent.rent_al';
 
   /// Geocoding (Nominatim compatible), limited to Albania.
   static const geocodingUrl = String.fromEnvironment(
@@ -62,17 +55,17 @@ class AppConfig {
   static const ambulanceNumber = '127';
 
   static const supportPhone = '+355690000000';
-  static const supportEmail = 'support@taksi.al';
+  static const supportEmail = 'support@rent.al';
 
-  /// First-ride promotion shown on the home screen.
-  static const promoCode = 'TAKSI30';
-  static const promoPercent = 30;
+  /// First-rental promotion shown on the home screen.
+  static const promoCode = 'QIRA20';
+  static const promoPercent = 20;
 
-  /// How long a driver's offer stays on the passenger's screen.
-  static const offerTimeoutSeconds = 15;
+  /// How far (km) from the chosen place cars are shown.
+  static const searchRadiusKm = 30.0;
 
-  /// How far (km) a ride request is broadcast to online drivers.
-  static const searchRadiusKm = 6.0;
+  /// Default pickup / return hour for new searches.
+  static const defaultPickupHour = 10;
 
   /// Demo mode OTP code.
   static const demoOtp = '123456';

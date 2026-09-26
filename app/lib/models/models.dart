@@ -1,6 +1,7 @@
 import 'package:latlong2/latlong.dart';
 
-enum UserRole { passenger, driver }
+/// Renters look for cars; owners list their cars. One account can switch.
+enum UserRole { renter, owner }
 
 class UserProfile {
   final String id;
@@ -13,7 +14,7 @@ class UserProfile {
     required this.id,
     required this.phone,
     required this.name,
-    this.role = UserRole.passenger,
+    this.role = UserRole.renter,
     this.rating = 5.0,
   });
 
@@ -56,82 +57,119 @@ class Place {
   int get hashCode => Object.hash(name, point);
 }
 
-/// A class of service (Standard, Comfort, Luxury, Van). Prices are in Lekë.
-class VehicleCategory {
+/// Economy, SUV, Luxury, Van. Prices are suggestions in Lekë per day.
+class CarCategory {
   final String id;
   final String nameKey;
-  final int baseFare;
-  final int perKm;
-  final int perMinute;
-  final int minFare;
+  final int suggestedPerDay;
+  final int suggestedDeposit;
   final int seats;
 
-  const VehicleCategory({
+  const CarCategory({
     required this.id,
     required this.nameKey,
-    required this.baseFare,
-    required this.perKm,
-    required this.perMinute,
-    required this.minFare,
+    required this.suggestedPerDay,
+    required this.suggestedDeposit,
     required this.seats,
   });
 }
 
-class Vehicle {
+enum Transmission { manual, automatic }
+
+enum Fuel { petrol, diesel, hybrid, electric }
+
+class Car {
+  final String id;
+  final String ownerId;
+  final String ownerName;
+  final double ownerRating;
+  final String ownerPhone;
   final String make;
   final String model;
+  final int year;
   final String plate;
-  final String color;
-  final String categoryId;
-  final int seats;
 
-  const Vehicle({
+  /// Paint colour as 0xAARRGGBB, used for the car drawing.
+  final int colorValue;
+  final String categoryId;
+  final Transmission transmission;
+  final Fuel fuel;
+  final int seats;
+  final int pricePerDay;
+  final int deposit;
+  final Place location;
+  final bool delivery;
+  final int deliveryFee;
+  final int minDays;
+  final int kmPerDay;
+  final String description;
+  final double rating;
+  final int trips;
+  final bool listed;
+
+  const Car({
+    required this.id,
+    required this.ownerId,
+    required this.ownerName,
     required this.make,
     required this.model,
+    required this.year,
     required this.plate,
-    required this.color,
     required this.categoryId,
-    this.seats = 4,
+    required this.pricePerDay,
+    required this.deposit,
+    required this.location,
+    this.ownerRating = 5.0,
+    this.ownerPhone = '',
+    this.colorValue = 0xFFE9EBEF,
+    this.transmission = Transmission.manual,
+    this.fuel = Fuel.diesel,
+    this.seats = 5,
+    this.delivery = false,
+    this.deliveryFee = 0,
+    this.minDays = 1,
+    this.kmPerDay = 250,
+    this.description = '',
+    this.rating = 5.0,
+    this.trips = 0,
+    this.listed = true,
   });
 
   String get title => '$make $model';
-}
 
-class Driver {
-  final String id;
-  final String name;
-  final String phone;
-  final double rating;
-  final int trips;
-  final bool verified;
-  final Vehicle vehicle;
-  final LatLng location;
-  final double heading;
-
-  const Driver({
-    required this.id,
-    required this.name,
-    required this.phone,
-    required this.rating,
-    required this.trips,
-    required this.vehicle,
-    required this.location,
-    this.verified = true,
-    this.heading = 0,
-  });
-
-  String get firstName => name.split(' ').first;
-
-  Driver copyWith({LatLng? location, double? heading}) => Driver(
-    id: id,
-    name: name,
-    phone: phone,
+  Car copyWith({
+    String? id,
+    String? ownerId,
+    String? ownerName,
+    Place? location,
+    bool? listed,
+    int? pricePerDay,
+  }) => Car(
+    id: id ?? this.id,
+    ownerId: ownerId ?? this.ownerId,
+    ownerName: ownerName ?? this.ownerName,
+    ownerRating: ownerRating,
+    ownerPhone: ownerPhone,
+    make: make,
+    model: model,
+    year: year,
+    plate: plate,
+    colorValue: colorValue,
+    categoryId: categoryId,
+    transmission: transmission,
+    fuel: fuel,
+    seats: seats,
+    pricePerDay: pricePerDay ?? this.pricePerDay,
+    deposit: deposit,
+    location: location ?? this.location,
+    delivery: delivery,
+    deliveryFee: deliveryFee,
+    minDays: minDays,
+    kmPerDay: kmPerDay,
+    description: description,
     rating: rating,
     trips: trips,
-    vehicle: vehicle,
-    verified: verified,
-    location: location ?? this.location,
-    heading: heading ?? this.heading,
+    listed: listed ?? this.listed,
   );
 }
 
@@ -183,155 +221,159 @@ class RouteInfo {
   });
 }
 
-enum RequestStatus { searching, accepted, cancelled, expired }
-
-/// What a passenger broadcasts to nearby drivers. The passenger proposes a
-/// fare; drivers answer with offers (at that fare or higher).
-class RideRequest {
-  final String id;
-  final String passengerId;
-  final String passengerName;
-  final double passengerRating;
-  final Place pickup;
-  final Place destination;
-  final RouteInfo route;
-  final String categoryId;
-  final int offeredFare;
-  final PaymentType payment;
-  final RequestStatus status;
-  final DateTime createdAt;
-
-  const RideRequest({
-    required this.id,
-    required this.passengerId,
-    required this.passengerName,
-    required this.pickup,
-    required this.destination,
-    required this.route,
-    required this.categoryId,
-    required this.offeredFare,
-    required this.payment,
-    required this.createdAt,
-    this.passengerRating = 5.0,
-    this.status = RequestStatus.searching,
-  });
-}
-
-enum OfferStatus { pending, accepted, declined, expired }
-
-class RideOffer {
-  final String id;
-  final String requestId;
-  final Driver driver;
-  final int price;
-  final int etaMinutes;
-  final DateTime createdAt;
-  final OfferStatus status;
-
-  const RideOffer({
-    required this.id,
-    required this.requestId,
-    required this.driver,
-    required this.price,
-    required this.etaMinutes,
-    required this.createdAt,
-    this.status = OfferStatus.pending,
-  });
-}
-
-enum RideStatus {
-  driverOnTheWay,
-  driverArrived,
-  inProgress,
+/// requested -> (countered ->) confirmed -> active -> completed.
+/// Can end early as declined / cancelled / expired.
+enum BookingStatus {
+  requested,
+  countered,
+  confirmed,
+  active,
   completed,
+  declined,
   cancelled,
+  expired,
 }
 
-class Ride {
-  final String id;
-  final RideRequest request;
-  final Driver driver;
-  final int price;
-  final RideStatus status;
-  final int etaMinutes;
+enum Pickup { atOwner, delivery }
 
-  /// 0..1 progress of the current leg (driver → pickup, or pickup → destination).
-  final double progress;
+/// Started 24-hour periods between [start] and [end], at least one. Same
+/// rule as `rental_days()` on the server.
+int rentalDays(DateTime start, DateTime end) {
+  final hours = end.difference(start).inHours;
+  return hours <= 0 ? 1 : (hours / 24).ceil();
+}
+
+class Booking {
+  final String id;
+  final Car car;
+  final String renterId;
+  final String renterName;
+  final double renterRating;
+  final String renterPhone;
+  final DateTime start;
+  final DateTime end;
+
+  /// What the renter asked to pay per day.
+  final int offeredPerDay;
+
+  /// Owner's counter-offer per day, if any.
+  final int? counterPerDay;
+
+  /// The agreed price per day once confirmed.
+  final int? agreedPerDay;
+  final BookingStatus status;
+  final Pickup pickup;
+  final String deliveryAddress;
+  final PaymentType payment;
+  final String note;
+
+  /// First-rental promo discount applied to this booking (validated by the
+  /// server when the request is made).
+  final int promoPercent;
   final DateTime createdAt;
   final int? rating;
-  final int tip;
   final String? cancelReason;
 
-  const Ride({
+  const Booking({
     required this.id,
-    required this.request,
-    required this.driver,
-    required this.price,
+    required this.car,
+    required this.renterId,
+    required this.renterName,
+    required this.start,
+    required this.end,
+    required this.offeredPerDay,
     required this.status,
-    required this.etaMinutes,
+    required this.payment,
     required this.createdAt,
-    this.progress = 0,
+    this.renterRating = 5.0,
+    this.renterPhone = '',
+    this.counterPerDay,
+    this.agreedPerDay,
+    this.pickup = Pickup.atOwner,
+    this.deliveryAddress = '',
+    this.note = '',
+    this.promoPercent = 0,
     this.rating,
-    this.tip = 0,
     this.cancelReason,
   });
 
-  bool get isActive =>
-      status != RideStatus.completed && status != RideStatus.cancelled;
+  /// Rental days, counted in started 24-hour periods (at least one).
+  int get days => rentalDays(start, end);
 
-  Ride copyWith({
-    Driver? driver,
-    RideStatus? status,
-    int? etaMinutes,
-    double? progress,
+  /// The price per day that currently applies.
+  int get perDay => agreedPerDay ?? counterPerDay ?? offeredPerDay;
+
+  bool get isOpen =>
+      status == BookingStatus.requested || status == BookingStatus.countered;
+
+  bool get isUpcomingOrActive =>
+      status == BookingStatus.confirmed || status == BookingStatus.active;
+
+  bool get isFinished =>
+      status == BookingStatus.completed ||
+      status == BookingStatus.declined ||
+      status == BookingStatus.cancelled ||
+      status == BookingStatus.expired;
+
+  Booking copyWith({
+    BookingStatus? status,
+    int? counterPerDay,
+    int? agreedPerDay,
     int? rating,
-    int? tip,
     String? cancelReason,
-  }) => Ride(
+    Car? car,
+  }) => Booking(
     id: id,
-    request: request,
-    driver: driver ?? this.driver,
-    price: price,
+    car: car ?? this.car,
+    renterId: renterId,
+    renterName: renterName,
+    renterRating: renterRating,
+    renterPhone: renterPhone,
+    start: start,
+    end: end,
+    offeredPerDay: offeredPerDay,
+    counterPerDay: counterPerDay ?? this.counterPerDay,
+    agreedPerDay: agreedPerDay ?? this.agreedPerDay,
     status: status ?? this.status,
-    etaMinutes: etaMinutes ?? this.etaMinutes,
+    pickup: pickup,
+    deliveryAddress: deliveryAddress,
+    payment: payment,
+    note: note,
+    promoPercent: promoPercent,
     createdAt: createdAt,
-    progress: progress ?? this.progress,
     rating: rating ?? this.rating,
-    tip: tip ?? this.tip,
     cancelReason: cancelReason ?? this.cancelReason,
   );
 }
 
 class ChatMessage {
   final String id;
-  final String rideId;
+  final String threadId;
   final String senderId;
   final String text;
   final DateTime sentAt;
 
   const ChatMessage({
     required this.id,
-    required this.rideId,
+    required this.threadId,
     required this.senderId,
     required this.text,
     required this.sentAt,
   });
 }
 
-class DriverEarnings {
-  final int today;
-  final int week;
-  final int tripsToday;
-  final int tripsWeek;
-  final double onlineHoursToday;
-  final List<Ride> recent;
+class OwnerEarnings {
+  final int thisMonth;
+  final int allTime;
+  final int rentalsThisMonth;
+  final int bookedDaysThisMonth;
+  final List<Booking> recent;
 
-  const DriverEarnings({
-    required this.today,
-    required this.week,
-    required this.tripsToday,
-    required this.tripsWeek,
-    required this.onlineHoursToday,
+  const OwnerEarnings({
+    required this.thisMonth,
+    required this.allTime,
+    required this.rentalsThisMonth,
+    required this.bookedDaysThisMonth,
     required this.recent,
   });
 }
