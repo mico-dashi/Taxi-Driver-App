@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../app.dart';
+import '../../core/brands.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../widgets/car_art.dart';
 import '../../widgets/design.dart';
+import '../../widgets/glass.dart' show GlassBrand;
 import 'login_screen.dart';
 
 /// First screen for logged-out users: a hero car on a dark stage, a big
@@ -156,7 +158,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       color: AppColors.inkSoft,
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 20),
+                  // Popular brands on the platform, as glass buttons.
+                  SizedBox(
+                    height: 48,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      clipBehavior: Clip.none,
+                      children: [
+                        for (final id in popularBrandIds.take(10))
+                          Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: GlassBrand(
+                              make: brandById(id)!.name,
+                              size: 48,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                   SlideAction(
                     label: context.tr('welcome_cta'),
                     icon: Icons.directions_car_filled_rounded,

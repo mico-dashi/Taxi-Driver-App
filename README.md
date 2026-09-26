@@ -13,15 +13,11 @@ It comes with a **backend** (database, security rules, realtime updates) that ma
 
 ## Design
 
-A dark, premium look in three colours: **racing red `#EC0618`**, **graphite `#212325`** and **near-black `#010101`**, with the Manrope font.
-- **Welcome screen**: a red sports car on a dark stage in front of a giant "AL", and a **slide-to-start** button.
-- **Home**: "Hello, …" greeting, a where/when search card, the QIRA20 promo, a **Top trends** carousel with hearts (favourites are saved), and a **Choose a car** list with big car cards, category chips and a red arrow button.
-- **Car details**: the car large with a reflection, brand badge, gearbox and seats tiles, a grid for fuel, km per day, deposit, minimum days, type and year, then owner, location map, terms, price, and a **slide to "Book now"** button.
-- **Floating pill menu** at the bottom, the active tab in a red circle. Maps switch to a night style.
-- Every car is **drawn in code in its own colour** as a side view (hatchback, sedan, sport, SUV or van, picked from the category and model), so listings look good before owners upload photos. The owner's "Add car" form shows a live preview.
-- New app icon: a white sports car on red, generated for Android, iPhone and web.
-
----
+**Liquid glass** in racing red `#EC0618`, graphite `#212325` and near-black `#010101`, with the Manrope font.
+- Every page sits on a dark backdrop with soft red light. Cards, buttons, the floating menu, the slide button and bottom bars are frosted glass: the background is blurred and brightened, with a light sheen and a bright rim.
+- **Car brands**: 32 brand logos (Volkswagen, Mercedes-Benz, BMW, Audi, Toyota, Hyundai, Kia, Škoda, Renault, Dacia, Fiat, Opel, Ford, Peugeot, Jeep, Porsche, Tesla and more). They appear as a brand filter on home and search, as badges on every car, and as a brand picker when owners add a car. Logos come from [Simple Icons](https://simpleicons.org) (CC0). They are trademarks of their owners and are shown only to identify a car's make.
+- **Real photos**: owners add up to 8 photos per car. Cards show the cover photo under a glass info panel, and the car page has a swipeable gallery. Cars without photos show a drawing in the car's colour.
+- Welcome screen with a hero car and slide-to-start, a "Top trends" carousel, a "Choose a car" list, and a car page with a spec grid and slide to "Book now".
 
 ## How it works
 

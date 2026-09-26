@@ -66,7 +66,7 @@ Cash at pickup works everywhere and is the default. In live mode, card and walle
 
 ## 8. Car photos
 
-Cars are shown as drawings in their own colour. Real photos are the next step: store them in Supabase Storage (a `car-photos` bucket) and add an image URL list to the `cars` table.
+Owners upload photos in the app. The migration `20260927000000_car_photos.sql` creates the public `car-photos` Storage bucket (5 MB per file, JPEG/PNG/WebP). Owners can only write into their own folder. When you approve a car, check that the photos really show that car and its plate.
 
 ## 9. Publishing the apps
 
