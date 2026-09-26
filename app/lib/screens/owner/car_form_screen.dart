@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/format.dart';
@@ -8,8 +9,10 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
+import '../../core/brands.dart';
 import '../../widgets/car_art.dart';
 import '../../widgets/common.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/rental_widgets.dart';
 import '../common/where_to_sheet.dart';
 
@@ -59,7 +62,39 @@ class _CarFormScreenState extends State<CarFormScreen> {
   late bool _delivery = c?.delivery ?? false;
   late int _deliveryFee = c?.deliveryFee ?? 500;
   late Place? _location = c?.location;
+  late final List<String> _photos = [...?c?.photos];
   bool _saving = false;
+  bool _uploading = false;
+
+  static const _maxPhotos = 8;
+
+  Future<void> _addPhotos() async {
+    final backend = context.read<AppState>().backend;
+    final List<XFile> files;
+    try {
+      files = await ImagePicker().pickMultiImage(
+        maxWidth: backend.isDemo ? 1280 : 1920,
+        imageQuality: backend.isDemo ? 72 : 82,
+        limit: _maxPhotos - _photos.length,
+      );
+    } catch (e) {
+      if (mounted) showError(context, e);
+      return;
+    }
+    if (files.isEmpty || !mounted) return;
+    setState(() => _uploading = true);
+    try {
+      for (final f in files.take(_maxPhotos - _photos.length)) {
+        final url = await backend.uploadCarPhoto(await f.readAsBytes());
+        if (!mounted) return;
+        setState(() => _photos.add(url));
+      }
+    } catch (e) {
+      if (mounted) showError(context, e);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -129,6 +164,7 @@ class _CarFormScreenState extends State<CarFormScreen> {
       rating: c?.rating ?? 5,
       trips: c?.trips ?? 0,
       listed: c?.listed ?? true,
+      photos: List.of(_photos),
     );
     setState(() => _saving = true);
     try {
@@ -141,6 +177,48 @@ class _CarFormScreenState extends State<CarFormScreen> {
     }
   }
 
+  Widget _thumb(int i) => SizedBox(
+    width: 132,
+    height: 100,
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: CarPhoto(_photos[i]),
+          ),
+        ),
+        if (i == 0)
+          Positioned(
+            left: 8,
+            bottom: 8,
+            child: Glass(
+              radius: 10,
+              shadow: false,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              child: Text(
+                context.tr('cover'),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: CircleIconButton(
+            icon: Icons.close_rounded,
+            size: 30,
+            tooltip: context.tr('remove_photo'),
+            onTap: () => setState(() => _photos.removeAt(i)),
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -151,20 +229,29 @@ class _CarFormScreenState extends State<CarFormScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           children: [
-            // Live preview in the chosen colour and body style.
-            Center(
-              child: CarArt(
-                color: Color(_color),
-                shape: shapeForListing(
-                  categoryId: _category,
-                  make: _make.text,
-                  model: _model.text,
-                  seats: _seats,
+            // Cover photo, or a live drawing in the chosen colour and style.
+            if (_photos.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: AspectRatio(
+                  aspectRatio: 16 / 10,
+                  child: CarPhoto(_photos.first),
                 ),
-                width: 280,
-                redCalipers: _category == 'luxury',
+              )
+            else
+              Center(
+                child: CarArt(
+                  color: Color(_color),
+                  shape: shapeForListing(
+                    categoryId: _category,
+                    make: _make.text,
+                    model: _model.text,
+                    seats: _seats,
+                  ),
+                  width: 280,
+                  redCalipers: _category == 'luxury',
+                ),
               ),
-            ),
             const SizedBox(height: 12),
             Wrap(
               alignment: WrapAlignment.center,
@@ -194,6 +281,79 @@ class _CarFormScreenState extends State<CarFormScreen> {
                     ),
                   ),
               ],
+            ),
+            SectionLabel(context.tr('photos')),
+            Text(
+              context.tr('photos_hint'),
+              style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                children: [
+                  if (_photos.length < _maxPhotos)
+                    Glass(
+                      width: 100,
+                      height: 100,
+                      radius: 20,
+                      shadow: false,
+                      onTap: _uploading ? null : _addPhotos,
+                      child: Center(
+                        child: _uploading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                ),
+                              )
+                            : Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.add_a_photo_outlined),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    context.tr('add_photo'),
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  for (var i = 0; i < _photos.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: _thumb(i),
+                    ),
+                ],
+              ),
+            ),
+            SectionLabel(context.tr('brand')),
+            SizedBox(
+              height: 64,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                children: [
+                  for (final id in popularBrandIds)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Tooltip(
+                        message: brandById(id)!.name,
+                        child: GlassBrand(
+                          make: brandById(id)!.name,
+                          size: 60,
+                          selected: brandFor(_make.text)?.id == id,
+                          onTap: () =>
+                              setState(() => _make.text = brandById(id)!.name),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             SectionLabel(context.tr('car_details')),
             TextField(

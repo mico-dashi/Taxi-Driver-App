@@ -40,16 +40,23 @@ class _MyCarsTabState extends State<MyCarsTab> {
   @override
   Widget build(BuildContext context) {
     final demo = context.read<AppState>().backend.isDemo;
+    // Keep the button above the floating glass menu.
+    final menu = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _edit,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        shape: const StadiumBorder(),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(context.tr('add_car')),
+      backgroundColor: Colors.transparent,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: menu),
+        child: FloatingActionButton.extended(
+          onPressed: _edit,
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: const StadiumBorder(),
+          icon: const Icon(Icons.add_rounded),
+          label: Text(context.tr('add_car')),
+        ),
       ),
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: _reload,
           child: FutureBuilder<List<Car>>(
@@ -57,7 +64,7 @@ class _MyCarsTabState extends State<MyCarsTab> {
             builder: (context, snap) {
               final cars = snap.data ?? const <Car>[];
               return ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 96),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 190),
                 children: [
                   Text(
                     context.tr('tab_my_cars'),

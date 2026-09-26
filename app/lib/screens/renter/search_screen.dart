@@ -9,6 +9,7 @@ import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/map_widgets.dart';
 import '../../widgets/rental_widgets.dart';
 import '../common/where_to_sheet.dart';
@@ -31,6 +32,8 @@ class _SearchScreenState extends State<SearchScreen> {
   late String? _category = widget.initialCategory;
   bool _showMap = false;
   bool _automaticOnly = false;
+  String? _brand;
+  List<String> _makes = const [];
   _Sort _sort = _Sort.distance;
   Future<List<Car>>? _results;
   Car? _selected;
@@ -54,9 +57,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   List<Car> _filtered(List<Car> cars) {
+    _makes = makesOf(cars);
     final list = cars
         .where(
-          (c) => !_automaticOnly || c.transmission == Transmission.automatic,
+          (c) =>
+              (!_automaticOnly || c.transmission == Transmission.automatic) &&
+              (_brand == null || isMake(c, _brand!)),
         )
         .toList();
     switch (_sort) {
@@ -114,40 +120,37 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Material(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(24),
-                      child: InkWell(
-                        onTap: _editPlace,
-                        borderRadius: BorderRadius.circular(24),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                app.effectiveSearchPlace.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                    child: Glass(
+                      radius: 24,
+                      shadow: false,
+                      onTap: _editPlace,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              app.effectiveSearchPlace.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
                               ),
-                              Text(
-                                '${context.dayTime(app.searchStart)} → ${context.dayTime(app.searchEnd)}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.inkSoft,
-                                ),
+                            ),
+                            Text(
+                              '${context.dayTime(app.searchStart)} → ${context.dayTime(app.searchEnd)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.inkSoft,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -164,7 +167,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ? Icons.view_list_rounded
                         : Icons.map_outlined,
                     tooltip: context.tr(_showMap ? 'list_view' : 'map_view'),
-                    color: _showMap ? AppColors.primary : AppColors.surface,
+                    color: _showMap ? AppColors.primary : null,
                     onTap: () => setState(() => _showMap = !_showMap),
                   ),
                 ],
@@ -255,10 +258,19 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _listView(List<Car> cars) {
     final place = context.read<AppState>().effectiveSearchPlace.point;
-    if (cars.isEmpty) return _empty();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
+        if (_makes.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
+            child: BrandFilterRow(
+              makes: _makes,
+              selected: _brand,
+              onSelect: (m) => setState(() => _brand = m),
+            ),
+          ),
+        if (cars.isEmpty) _empty(),
         Padding(
           padding: const EdgeInsets.only(bottom: 10, left: 4),
           child: Text(

@@ -40,6 +40,7 @@ class _RentalsTabState extends State<RentalsTab> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<List<Booking>>(
@@ -50,7 +51,7 @@ class _RentalsTabState extends State<RentalsTab> {
             final current = all.where((b) => b.isUpcomingOrActive).toList();
             final past = all.where((b) => b.isFinished).toList();
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
               children: [
                 Text(
                   context.tr('tab_rentals'),

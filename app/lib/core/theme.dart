@@ -1,4 +1,7 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
+
+import '../widgets/glass.dart';
 
 /// Rent AL colours: racing red on graphite and near-black.
 class AppColors {
@@ -12,6 +15,9 @@ class AppColors {
   static const surface = Color(0xFF212325); // cards
   static const surfaceHigh = Color(0xFF2B2E31); // tiles inside cards
   static const sheet = Color(0xFF161819); // bottom sheets and dialogs
+  static const sheetGlass = Color(0xF0181A1C); // translucent sheets
+  static const glassFill = Color(0x14FFFFFF); // inputs and chips on glass
+  static const glassEdge = Color(0x29FFFFFF);
   static const border = Color(0xFF303337);
   static const danger = Color(0xFFFF5A61);
   static const dangerSoft = Color(0xFF3A1416);
@@ -55,8 +61,32 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: scheme,
       fontFamily: font,
-      scaffoldBackgroundColor: AppColors.background,
+      // Pages are transparent: each route paints the aurora backdrop
+      // behind it (see AuroraPageTransitionsBuilder) for the glass look.
+      scaffoldBackgroundColor: Colors.transparent,
       canvasColor: AppColors.background,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: AuroraPageTransitionsBuilder(
+            CupertinoPageTransitionsBuilder(),
+          ),
+          TargetPlatform.macOS: AuroraPageTransitionsBuilder(
+            CupertinoPageTransitionsBuilder(),
+          ),
+          TargetPlatform.android: AuroraPageTransitionsBuilder(
+            FadeForwardsPageTransitionsBuilder(),
+          ),
+          TargetPlatform.linux: AuroraPageTransitionsBuilder(
+            FadeForwardsPageTransitionsBuilder(),
+          ),
+          TargetPlatform.windows: AuroraPageTransitionsBuilder(
+            FadeForwardsPageTransitionsBuilder(),
+          ),
+          TargetPlatform.fuchsia: AuroraPageTransitionsBuilder(
+            FadeForwardsPageTransitionsBuilder(),
+          ),
+        },
+      ),
     );
     final pill = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(30),
@@ -68,7 +98,7 @@ class AppTheme {
         fontFamily: font,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.ink,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -123,7 +153,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.glassFill,
         hintStyle: const TextStyle(color: AppColors.inkFaint),
         labelStyle: const TextStyle(color: AppColors.inkSoft),
         floatingLabelStyle: const TextStyle(color: AppColors.primaryLight),
@@ -135,11 +165,11 @@ class AppTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.glassEdge),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.glassEdge),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -147,10 +177,10 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.glassFill,
         selectedColor: AppColors.primary,
-        disabledColor: AppColors.surface,
-        side: const BorderSide(color: AppColors.border),
+        disabledColor: AppColors.glassFill,
+        side: const BorderSide(color: AppColors.glassEdge),
         labelStyle: const TextStyle(
           fontFamily: font,
           color: AppColors.ink,
@@ -168,11 +198,11 @@ class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
-          backgroundColor: AppColors.surface,
+          backgroundColor: AppColors.glassFill,
           foregroundColor: AppColors.inkSoft,
           selectedBackgroundColor: AppColors.primary,
           selectedForegroundColor: Colors.white,
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: AppColors.glassEdge),
         ),
       ),
       switchTheme: SwitchThemeData(
@@ -204,13 +234,14 @@ class AppTheme {
         textColor: AppColors.ink,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.sheet,
-        modalBackgroundColor: AppColors.sheet,
+        backgroundColor: AppColors.sheetGlass,
+        modalBackgroundColor: AppColors.sheetGlass,
+        modalBarrierColor: Color(0x8C000000),
         surfaceTintColor: Colors.transparent,
         showDragHandle: false,
       ),
       dialogTheme: const DialogThemeData(
-        backgroundColor: AppColors.sheet,
+        backgroundColor: AppColors.sheetGlass,
         surfaceTintColor: Colors.transparent,
       ),
       popupMenuTheme: const PopupMenuThemeData(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -144,6 +145,7 @@ class SupabaseBackend implements Backend {
     rating: ((r['rating'] ?? 5) as num).toDouble(),
     trips: (r['trips'] ?? 0) as int,
     listed: (r['listed'] ?? true) as bool,
+    photos: [for (final p in (r['photos'] as List? ?? const [])) p as String],
   );
 
   static Map<String, dynamic> _carToRow(Car c) => {
@@ -168,6 +170,7 @@ class SupabaseBackend implements Backend {
     'km_per_day': c.kmPerDay,
     'description': c.description,
     'listed': c.listed,
+    'photos': c.photos,
   };
 
   Future<Map<String, Map<String, dynamic>>> _profiles(
@@ -403,6 +406,18 @@ class SupabaseBackend implements Backend {
               .single()
         : await _db.from('cars').update(row).eq('id', car.id).select().single();
     return carFromRow(saved);
+  });
+
+  @override
+  Future<String> uploadCarPhoto(Uint8List jpeg) => _guard(() async {
+    final path = '$currentUserId/${DateTime.now().microsecondsSinceEpoch}.jpg';
+    final bucket = _db.storage.from('car-photos');
+    await bucket.uploadBinary(
+      path,
+      jpeg,
+      fileOptions: const FileOptions(contentType: 'image/jpeg'),
+    );
+    return bucket.getPublicUrl(path);
   });
 
   @override

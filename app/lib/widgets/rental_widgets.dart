@@ -5,9 +5,11 @@ import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
 import '../services/pricing.dart';
+import '../core/brands.dart';
 import 'car_art.dart';
 import 'common.dart';
 import 'design.dart';
+import 'glass.dart';
 
 /// Lets the user choose pickup and return days, then the pickup hour.
 /// Returns (start, end) or null when cancelled.
@@ -336,8 +338,50 @@ class PerDayPrice extends StatelessWidget {
   }
 }
 
-/// Wide dark card for the "Top trends" carousel: the car on a tinted stage,
-/// a heart, name, place, rating and price.
+/// The car's picture layer for cards: the cover photo filling the card, or
+/// the drawing floating in the top part of the glass.
+class _CardImage extends StatelessWidget {
+  const _CardImage({required this.car, required this.carWidth});
+
+  final Car car;
+  final double carWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    if (car.photos.isNotEmpty) {
+      return Positioned.fill(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CarPhoto(car.photos.first),
+            // Darken the bottom a little so the glass panel reads well.
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00000000), Color(0x66000000)],
+                  stops: [0.4, 1],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Positioned(
+      top: 34,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: CarShowcase(car: car, width: carWidth, reflection: false),
+      ),
+    );
+  }
+}
+
+/// Card for the "Top trends" carousel: photo (or drawing), brand logo,
+/// heart, and a frosted panel with name, place, rating and price.
 class TrendCard extends StatelessWidget {
   const TrendCard({super.key, required this.car, required this.onTap});
 
@@ -346,123 +390,110 @@ class TrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = Color(car.colorValue);
-    return SizedBox(
-      width: 252,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(26),
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(26),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(tint, const Color(0xFF2A2C2F), 0.72)!,
-                  const Color(0xFF151618),
-                ],
-              ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: 22,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: CarShowcase(car: car, width: 216, reflection: false),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: FavoriteButton(carId: car.id, size: 36),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 14,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              car.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.place_outlined,
-                                  size: 13,
-                                  color: AppColors.inkSoft,
-                                ),
-                                const SizedBox(width: 3),
-                                Flexible(
-                                  child: Text(
-                                    car.location.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.inkSoft,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Rating(car.rating, trips: car.trips),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            money(car.pricePerDay),
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                            ),
+    return Glass(
+      width: 264,
+      radius: 30,
+      onTap: onTap,
+      grouped: true,
+      shadow: false,
+      child: Stack(
+        children: [
+          _CardImage(car: car, carWidth: 212),
+          Positioned(
+            top: 12,
+            left: 12,
+            child: GlassBrand(make: car.make, size: 42),
+          ),
+          Positioned(
+            top: 12,
+            right: 12,
+            child: FavoriteButton(carId: car.id, size: 42),
+          ),
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 8,
+            child: Glass(
+              radius: 22,
+              blur: 18,
+              strength: 1.1,
+              shadow: false,
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          car.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
-                          Text(
-                            context.tr('per_day_long'),
-                            style: const TextStyle(
-                              fontSize: 11,
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.place_outlined,
+                              size: 12,
                               color: AppColors.inkSoft,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                car.location.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.inkSoft,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Rating(car.rating, trips: car.trips),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        money(car.pricePerDay),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        context.tr('per_day_long'),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.inkSoft,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Big "Choose a car" card: make and model on the left, rating and price on
-/// the right, the car filling the bottom and a red arrow button.
+/// Big "Choose a car" card: photo (or drawing) with the brand logo and a
+/// heart on top, and a frosted panel with make, model, specs, price and a
+/// red arrow.
 class ChooseCarCard extends StatelessWidget {
   const ChooseCarCard({
     super.key,
@@ -477,137 +508,141 @@ class ChooseCarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    return LayoutBuilder(
+      builder: (context, box) => Glass(
+        height: 236,
+        radius: 32,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(28),
-        child: Ink(
-          height: 196,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: const RadialGradient(
-              center: Alignment(0.55, 0.6),
-              radius: 1.1,
-              colors: [Color(0xFF34373B), AppColors.surface, Color(0xFF18191B)],
-              stops: [0, 0.5, 1],
+        grouped: true,
+        shadow: false,
+        child: Stack(
+          children: [
+            _CardImage(
+              car: car,
+              carWidth: (box.maxWidth * 0.66).clamp(200.0, 300.0),
             ),
-          ),
-          child: LayoutBuilder(
-            builder: (context, box) {
-              final carW = (box.maxWidth * 0.72).clamp(200.0, 300.0);
-              return Stack(
+            Positioned(
+              top: 14,
+              left: 14,
+              child: GlassBrand(make: car.make, size: 46),
+            ),
+            Positioned(
+              top: 14,
+              right: 14,
+              child: Row(
                 children: [
-                  Positioned(
-                    right: -carW * 0.06,
-                    bottom: 12,
-                    child: CarShowcase(
-                      car: car,
-                      width: carW,
-                      reflection: false,
+                  Glass(
+                    radius: 16,
+                    shadow: false,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                  ),
-                  Positioned(
-                    left: 18,
-                    top: 16,
-                    right: 18,
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                car.make,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                '${car.model} · ${car.year}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.inkSoft,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 10,
-                                runSpacing: 4,
-                                children: [
-                                  _spec(
-                                    Icons.settings_rounded,
-                                    transmissionLabel(
-                                      context,
-                                      car.transmission,
-                                    ),
-                                  ),
-                                  _spec(
-                                    Icons.local_gas_station_rounded,
-                                    fuelLabel(context, car.fuel),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 15,
+                          color: AppColors.star,
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.star_rounded,
-                                  size: 16,
-                                  color: AppColors.star,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  car.rating.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              money(car.pricePerDay),
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            Text(
-                              context.tr('per_day_long'),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.inkSoft,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 3),
+                        Text(
+                          car.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Positioned(
-                    left: 16,
-                    bottom: 16,
-                    child: Container(
-                      width: 46,
-                      height: 46,
+                  const SizedBox(width: 8),
+                  FavoriteButton(carId: car.id, size: 40),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 10,
+              right: 10,
+              bottom: 10,
+              child: Glass(
+                radius: 24,
+                blur: 18,
+                strength: 1.1,
+                shadow: false,
+                padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            car.make,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.inkSoft,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${car.model} · ${car.year}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            [
+                              transmissionLabel(context, car.transmission),
+                              fuelLabel(context, car.fuel),
+                              ?distanceLabel,
+                            ].join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.inkSoft,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          money(car.pricePerDay),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          context.tr('per_day_long'),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.inkSoft,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        gradient: redDroplet,
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.primary.withValues(alpha: 0.45),
@@ -621,28 +656,179 @@ class ChooseCarCard extends StatelessWidget {
                         size: 22,
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  static Widget _spec(IconData icon, String text) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, size: 13, color: AppColors.inkFaint),
-      const SizedBox(width: 3),
-      Text(
-        text,
-        style: const TextStyle(fontSize: 12, color: AppColors.inkFaint),
-      ),
-    ],
-  );
 }
+
+/// Swipeable car photos with glass page dots.
+class PhotoGallery extends StatefulWidget {
+  const PhotoGallery({super.key, required this.photos, this.height = 240});
+
+  final List<String> photos;
+  final double height;
+
+  @override
+  State<PhotoGallery> createState() => _PhotoGalleryState();
+}
+
+class _PhotoGalleryState extends State<PhotoGallery> {
+  int _page = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final n = widget.photos.length;
+    return SizedBox(
+      height: widget.height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: Stack(
+          children: [
+            PageView.builder(
+              itemCount: n,
+              onPageChanged: (p) => setState(() => _page = p),
+              itemBuilder: (_, i) => CarPhoto(widget.photos[i]),
+            ),
+            if (n > 1)
+              Positioned(
+                bottom: 12,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Glass(
+                    radius: 12,
+                    shadow: false,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < n; i++)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: i == _page ? 18 : 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: i == _page
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Row of brand logos to filter cars; "All" first.
+class BrandFilterRow extends StatelessWidget {
+  const BrandFilterRow({
+    super.key,
+    required this.makes,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  /// Makes to offer, e.g. the ones among the search results.
+  final List<String> makes;
+  final String? selected;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget item(String? make, Widget logo, String label) {
+      final on = make == null ? selected == null : selected == make;
+      return Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Semantics(
+          button: true,
+          selected: on,
+          label: label,
+          excludeSemantics: true,
+          child: GestureDetector(
+            onTap: () => onSelect(make),
+            child: Column(
+              children: [
+                Glass(
+                  circle: true,
+                  width: 60,
+                  height: 60,
+                  shadow: false,
+                  grouped: true,
+                  selected: on,
+                  tint: on ? AppColors.primary : null,
+                  child: Center(child: logo),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: 66,
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: on ? FontWeight.w700 : FontWeight.w500,
+                      color: on ? AppColors.ink : AppColors.inkSoft,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 84,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        children: [
+          item(
+            null,
+            const Icon(Icons.apps_rounded, size: 26),
+            context.tr('all_brands'),
+          ),
+          for (final m in makes)
+            item(m, BrandLogo(make: m, size: 28), brandFor(m)?.name ?? m),
+        ],
+      ),
+    );
+  }
+}
+
+/// Makes among [cars], most common first.
+List<String> makesOf(Iterable<Car> cars) {
+  final counts = <String, int>{};
+  for (final c in cars) {
+    final key = brandFor(c.make)?.name ?? c.make;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts.keys.toList()..sort((a, b) => counts[b]!.compareTo(counts[a]!));
+}
+
+/// Whether [car] is of the brand shown as [make] in a [BrandFilterRow].
+bool isMake(Car car, String make) =>
+    (brandFor(car.make)?.name ?? car.make) == make;
 
 /// Line-by-line price: days x price, long-stay discount, promo, delivery,
 /// total, and the refundable deposit.

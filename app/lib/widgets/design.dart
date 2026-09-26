@@ -5,6 +5,15 @@ import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
 import '../state/app_state.dart';
+import 'glass.dart';
+
+/// Glossy red fill for active knobs and tabs, lit from the top-left.
+const redDroplet = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [Color(0xFFFF5561), AppColors.primary, Color(0xFFA8000F)],
+  stops: [0, 0.45, 1],
+);
 
 /// Big pill with a red round knob: slide it to the end (or tap) to act.
 /// The ">>>" hint on the right pulses gently to invite the swipe.
@@ -106,13 +115,9 @@ class _SlideActionState extends State<SlideAction>
             onHorizontalDragEnd: _active
                 ? (_) => progress > 0.7 ? _submit(max) : _animateTo(0)
                 : null,
-            child: Container(
+            child: Glass(
               height: h,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(h / 2),
-                border: Border.all(color: AppColors.border),
-              ),
+              radius: h / 2,
               child: Stack(
                 alignment: Alignment.centerLeft,
                 children: [
@@ -188,9 +193,11 @@ class _SlideActionState extends State<SlideAction>
                       height: knob,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _active
-                            ? AppColors.primary
-                            : AppColors.surfaceHigh,
+                        gradient: _active ? redDroplet : null,
+                        color: _active ? null : AppColors.glassFill,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
                         boxShadow: _active
                             ? [
                                 BoxShadow(
@@ -264,14 +271,11 @@ class PillNavBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(24, 6, 24, 12),
         child: Center(
           heightFactor: 1,
-          child: Container(
+          child: Glass(
+            radius: 40,
+            blur: 26,
+            strength: 1.15,
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: AppColors.border),
-              boxShadow: const [BoxShadow(color: Colors.black, blurRadius: 24)],
-            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -305,7 +309,10 @@ class PillNavBar extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: active ? AppColors.primary : Colors.transparent,
+              gradient: active ? redDroplet : null,
+              border: active
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.4))
+                  : null,
               boxShadow: active
                   ? [
                       BoxShadow(
@@ -402,12 +409,12 @@ class FavoriteButton extends StatelessWidget {
     super.key,
     required this.carId,
     this.size = 40,
-    this.color = const Color(0x33000000),
+    this.color,
   });
 
   final String carId;
   final double size;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -415,26 +422,22 @@ class FavoriteButton extends StatelessWidget {
     final fav = app.isFavorite(carId);
     return Tooltip(
       message: context.tr(fav ? 'remove_favorite' : 'add_favorite'),
-      child: Material(
-        color: color,
-        shape: CircleBorder(
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: () => app.toggleFavorite(carId),
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
-              child: Icon(
-                fav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                key: ValueKey(fav),
-                size: size * 0.5,
-                color: fav ? AppColors.primary : AppColors.ink,
-              ),
+      child: Glass(
+        circle: true,
+        width: size,
+        height: size,
+        shadow: false,
+        tint: color,
+        onTap: () => app.toggleFavorite(carId),
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
+            child: Icon(
+              fav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              key: ValueKey(fav),
+              size: size * 0.5,
+              color: fav ? AppColors.primaryLight : AppColors.ink,
             ),
           ),
         ),
@@ -443,7 +446,7 @@ class FavoriteButton extends StatelessWidget {
   }
 }
 
-/// Round badge with the make's initials, standing in for a brand logo.
+/// The car's brand logo in a round glass badge.
 class MakeBadge extends StatelessWidget {
   const MakeBadge(this.car, {super.key, this.size = 48});
 
@@ -451,35 +454,7 @@ class MakeBadge extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    final words = car.make.trim().split(RegExp(r'[\s-]+'));
-    final text = words.length > 1
-        ? words.take(2).map((w) => w.isEmpty ? '' : w[0]).join()
-        : car.make.characters.take(2).toString();
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFD5D8DC)],
-        ),
-        border: Border.all(color: AppColors.primary, width: 2),
-      ),
-      child: Text(
-        text.toUpperCase(),
-        style: TextStyle(
-          fontSize: size * 0.32,
-          fontWeight: FontWeight.w800,
-          color: AppColors.primary,
-          letterSpacing: -0.5,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => GlassBrand(make: car.make, size: size);
 }
 
 /// Small dark tile with an icon, a value and a caption (e.g. "Automatik /
@@ -502,22 +477,12 @@ class SpecTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Glass(
+      radius: compact ? 18 : 24,
+      shadow: false,
+      strength: compact ? 0.8 : 1,
+      grouped: !compact,
       padding: EdgeInsets.all(compact ? 12 : 16),
-      decoration: BoxDecoration(
-        color: compact ? AppColors.surfaceHigh : AppColors.surface,
-        borderRadius: BorderRadius.circular(compact ? 16 : 22),
-        gradient: glow
-            ? RadialGradient(
-                center: const Alignment(-0.9, 1.1),
-                radius: 1.3,
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.13),
-                  AppColors.surface,
-                ],
-              )
-            : null,
-      ),
       child: compact
           ? Row(
               children: [
@@ -525,11 +490,11 @@ class SpecTile extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: const Color(0x26000000),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.glassEdge),
                   ),
-                  child: Icon(icon, size: 18, color: AppColors.inkSoft),
+                  child: Icon(icon, size: 18, color: AppColors.ink),
                 ),
                 const SizedBox(width: 10),
                 Expanded(child: _texts()),
@@ -538,8 +503,18 @@ class SpecTile extends StatelessWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 24, color: AppColors.ink),
-                const SizedBox(height: 16),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: glow ? redDroplet : null,
+                    color: glow ? null : const Color(0x26000000),
+                    border: Border.all(color: AppColors.glassEdge),
+                  ),
+                  child: Icon(icon, size: 20, color: AppColors.ink),
+                ),
+                const SizedBox(height: 14),
                 _texts(),
               ],
             ),

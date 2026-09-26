@@ -45,6 +45,8 @@ dependencies:
   intl: ^0.20.3
   flutter_localizations:
     sdk: flutter
+  path_drawing: ^1.0.1
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

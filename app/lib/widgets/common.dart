@@ -4,6 +4,7 @@ import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
 import 'car_art.dart';
+import 'glass.dart';
 
 /// Initials avatar (no photos needed; works offline).
 class Avatar extends StatelessWidget {
@@ -177,9 +178,9 @@ class Plate extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.border),
+        color: const Color(0x33000000),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.glassEdge),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -229,19 +230,10 @@ class SheetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 24,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
+    return Glass(
+      radius: 30,
+      blur: 30,
+      strength: 1.2,
       child: SafeArea(
         top: false,
         child: Padding(padding: padding, child: child),
@@ -264,29 +256,21 @@ class CardBox extends StatelessWidget {
   final EdgeInsets padding;
   final VoidCallback? onTap;
   final bool selected;
+
+  /// Optional tint for the glass (e.g. red-tinted for notes and hints).
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color ?? AppColors.surface,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: padding,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: selected ? AppColors.primary : Colors.transparent,
-              width: 1.6,
-            ),
-          ),
-          child: child,
-        ),
-      ),
+    return Glass(
+      radius: 24,
+      padding: padding,
+      onTap: onTap,
+      selected: selected,
+      tint: color,
+      shadow: false,
+      grouped: true,
+      child: child,
     );
   }
 }
@@ -455,13 +439,11 @@ class StepHeader extends StatelessWidget {
         CircleIconButton(icon: Icons.chevron_left_rounded, onTap: onBack),
         const SizedBox(width: 10),
         Expanded(
-          child: Container(
-            height: 44,
+          child: Glass(
+            height: 48,
+            radius: 24,
+            shadow: false,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(24),
-            ),
             child: Row(
               children: [
                 for (var i = 0; i < labels.length; i++) ...[
@@ -531,14 +513,14 @@ class _StepDot extends StatelessWidget {
   }
 }
 
-/// Round dark button used in the top bars (back, search, favourite).
+/// Round glass button used in the top bars (back, search, favourite).
 class CircleIconButton extends StatelessWidget {
   const CircleIconButton({
     super.key,
     required this.icon,
     required this.onTap,
     this.size = 48,
-    this.color = AppColors.surface,
+    this.color,
     this.iconColor = AppColors.ink,
     this.tooltip,
   });
@@ -546,23 +528,23 @@ class CircleIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final double size;
-  final Color color;
+
+  /// Tint for the glass; null keeps it clear.
+  final Color? color;
   final Color iconColor;
   final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
-    final button = Material(
-      color: color,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Icon(icon, color: iconColor, size: size * 0.46),
-        ),
+    final button = Glass(
+      circle: true,
+      width: size,
+      height: size,
+      tint: color,
+      onTap: onTap,
+      shadow: false,
+      child: Center(
+        child: Icon(icon, color: iconColor, size: size * 0.46),
       ),
     );
     return tooltip == null ? button : Tooltip(message: tooltip, child: button);
@@ -584,13 +566,10 @@ class StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Glass(
       height: 44,
+      radius: 22,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
-      ),
       child: Row(
         children: [
           Container(
@@ -638,8 +617,9 @@ class PaymentIcon extends StatelessWidget {
       width: 44,
       height: 32,
       decoration: BoxDecoration(
-        color: AppColors.surfaceHigh,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.glassFill,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.glassEdge),
       ),
       child: Icon(icon, color: color, size: 22),
     );

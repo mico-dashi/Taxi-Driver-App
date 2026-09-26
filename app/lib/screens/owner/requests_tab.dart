@@ -11,6 +11,7 @@ import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/rental_widgets.dart';
 import '../common/booking_screen.dart';
 
@@ -90,10 +91,11 @@ class _RequestsTabState extends State<RequestsTab> {
     final out = all.where((b) => b.status == BookingStatus.active).toList();
     final history = all.where((b) => b.isFinished).toList();
     return SafeArea(
+      bottom: false,
       child: RefreshIndicator(
         onRefresh: _loadCars,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
           children: [
             Row(
               children: [
@@ -226,158 +228,153 @@ class _RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final b = booking;
     final below = b.offeredPerDay < b.car.pricePerDay;
-    return Material(
-      color: AppColors.surface,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onOpen,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Avatar(b.renterName, size: 42),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          b.renterName,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        Rating(b.renterRating),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+    return Glass(
+      radius: 26,
+      grouped: true,
+      shadow: false,
+      onTap: onOpen,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Avatar(b.renterName, size: 42),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${money(b.offeredPerDay)}${context.tr('per_day_short')}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        b.renterName,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      if (below)
-                        Text(
-                          context.tr('you_ask', {
-                            'p': money(b.car.pricePerDay),
-                          }),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.primaryLight,
-                          ),
-                        ),
+                      Rating(b.renterRating),
                     ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  CarBadge.of(b.car, size: 36),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          b.car.title,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          '${context.dayRange(b.start, b.end)} · ${context.tr('n_days', {'n': '${b.days}'})}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.inkSoft,
-                          ),
-                        ),
-                      ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${money(b.offeredPerDay)}${context.tr('per_day_short')}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  Pill(
-                    '${context.tr('total')}: ${money(Pricing.quoteFor(b).total)}',
-                    color: AppColors.surfaceHigh,
-                    textColor: AppColors.ink,
-                    dot: false,
-                  ),
-                  Pill(
-                    paymentTypeLabel(context, b.payment),
-                    color: AppColors.surfaceHigh,
-                    textColor: AppColors.inkSoft,
-                    dot: false,
-                  ),
-                  if (b.pickup == Pickup.delivery)
-                    Pill(
-                      context.tr('delivery'),
-                      color: AppColors.primarySoft,
-                      textColor: AppColors.primaryLight,
-                      dot: false,
-                    ),
-                ],
-              ),
-              if (b.note.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  '“${b.note}”',
-                  style: const TextStyle(
-                    color: AppColors.inkSoft,
-                    fontStyle: FontStyle.italic,
+                    if (below)
+                      Text(
+                        context.tr('you_ask', {'p': money(b.car.pricePerDay)}),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.primaryLight,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                CarBadge.of(b.car, size: 36),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        b.car.title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        '${context.dayRange(b.start, b.end)} · ${context.tr('n_days', {'n': '${b.days}'})}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.inkSoft,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: busy ? null : onDecline,
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                        backgroundColor: AppColors.dangerSoft,
-                        foregroundColor: AppColors.danger,
-                        side: BorderSide.none,
-                      ),
-                      child: Text(context.tr('decline')),
-                    ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                Pill(
+                  '${context.tr('total')}: ${money(Pricing.quoteFor(b).total)}',
+                  color: AppColors.surfaceHigh,
+                  textColor: AppColors.ink,
+                  dot: false,
+                ),
+                Pill(
+                  paymentTypeLabel(context, b.payment),
+                  color: AppColors.surfaceHigh,
+                  textColor: AppColors.inkSoft,
+                  dot: false,
+                ),
+                if (b.pickup == Pickup.delivery)
+                  Pill(
+                    context.tr('delivery'),
+                    color: AppColors.primarySoft,
+                    textColor: AppColors.primaryLight,
+                    dot: false,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: busy ? null : onCounter,
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                      ),
-                      child: Text(context.tr('counter_short')),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: busy ? null : onAccept,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                      ),
-                      child: Text(context.tr('accept')),
-                    ),
-                  ),
-                ],
+              ],
+            ),
+            if (b.note.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '“${b.note}”',
+                style: const TextStyle(
+                  color: AppColors.inkSoft,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
-          ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: busy ? null : onDecline,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      backgroundColor: AppColors.dangerSoft,
+                      foregroundColor: AppColors.danger,
+                      side: BorderSide.none,
+                    ),
+                    child: Text(context.tr('decline')),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: busy ? null : onCounter,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                    child: Text(context.tr('counter_short')),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: busy ? null : onAccept,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                    child: Text(context.tr('accept')),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:latlong2/latlong.dart';
 
 import '../models/models.dart';
@@ -76,6 +78,10 @@ abstract class Backend {
 
   /// Creates (empty id) or updates a car listing; returns the saved car.
   Future<Car> saveCar(Car car);
+
+  /// Stores a JPEG photo of an owner's car; returns the URL to save in
+  /// [Car.photos].
+  Future<String> uploadCarPhoto(Uint8List jpeg);
   Future<void> setListed(String carId, bool listed);
 
   /// All bookings for my cars, kept up to date.

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -790,6 +791,11 @@ class DemoBackend implements Backend {
     return saved;
   }
 
+  /// Demo mode keeps photos on the device as data URIs.
+  @override
+  Future<String> uploadCarPhoto(Uint8List jpeg) async =>
+      'data:image/jpeg;base64,${base64Encode(jpeg)}';
+
   @override
   Future<void> setListed(String carId, bool listed) async {
     final i = _cars.indexWhere((c) => c.id == carId);
@@ -981,6 +987,7 @@ Map<String, dynamic> carToJson(Car c) => {
   'kmPerDay': c.kmPerDay,
   'description': c.description,
   'listed': c.listed,
+  'photos': c.photos,
 };
 
 Car carFromJson(Map<String, dynamic> j) => Car(
@@ -1005,4 +1012,5 @@ Car carFromJson(Map<String, dynamic> j) => Car(
   kmPerDay: j['kmPerDay'] as int,
   description: j['description'] as String,
   listed: j['listed'] as bool,
+  photos: [for (final p in (j['photos'] as List? ?? const [])) p as String],
 );

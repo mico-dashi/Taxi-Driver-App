@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:taksi_al/core/brands.dart';
 import 'package:taksi_al/core/config.dart';
 import 'package:taksi_al/core/places.dart';
 import 'package:taksi_al/models/models.dart';
@@ -297,4 +300,38 @@ void main() {
       b.dispose();
     },
   );
+
+  test('owner photos are stored with the car', () async {
+    final backend = DemoBackend();
+    final url = await backend.uploadCarPhoto(Uint8List.fromList([1, 2, 3]));
+    expect(url, 'data:image/jpeg;base64,AQID');
+    final car = carFromJson(
+      carToJson(
+        Car(
+          id: 'c',
+          ownerId: 'o',
+          ownerName: 'O',
+          make: 'BMW',
+          model: 'X5',
+          year: 2021,
+          plate: 'AB 123 CD',
+          categoryId: 'luxury',
+          pricePerDay: 12000,
+          deposit: 100000,
+          location: AlbanianPlaces.all.first,
+          photos: [url],
+        ),
+      ),
+    );
+    expect(car.photos, [url]);
+    backend.dispose();
+  });
+
+  test('brands are found from free-text makes', () {
+    expect(brandFor('VW')?.id, 'volkswagen');
+    expect(brandFor('Mercedes-Benz')?.id, 'mercedes');
+    expect(brandFor('Škoda')?.id, 'skoda');
+    expect(brandFor('land rover')?.id, 'landrover');
+    expect(brandFor('Zastava'), isNull);
+  });
 }

@@ -9,6 +9,13 @@ import 'package:taksi_al/services/demo_backend.dart';
 import 'package:taksi_al/services/geocoding_service.dart';
 import 'package:taksi_al/state/app_state.dart';
 
+/// The page's vertical scroll view (not the horizontal photo/brand rows).
+final vertical = find
+    .byWidgetPredicate(
+      (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+    )
+    .first;
+
 void main() {
   testWidgets('renter: login -> search -> car -> offer -> request sent', (
     tester,
@@ -68,7 +75,15 @@ void main() {
     await tester.tap(find.byTooltip('Search cars'));
     await tester.pumpAndSettle();
     expect(find.textContaining('cars available'), findsOneWidget);
-    expect(find.text('Golf 7 · 2018'), findsOneWidget);
+    // Brand filter: only Volkswagen cars.
+    await tester.tap(find.bySemanticsLabel('Volkswagen').first);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Yaris'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.text('Golf 7 · 2018'),
+      300,
+      scrollable: vertical,
+    );
 
     await tester.ensureVisible(find.text('Golf 7 · 2018'));
     await tester.pumpAndSettle();
@@ -79,12 +94,12 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Arben Hoxha'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: vertical,
     );
     await tester.scrollUntilVisible(
       find.text('Rental terms'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: vertical,
     );
     expect(find.text('Return at the same level'), findsOneWidget);
     await tester.tap(find.text('Book now'));
@@ -160,17 +175,32 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> fill(String label, String value) async {
-      await tester.enterText(find.widgetWithText(TextField, label), value);
+      final field = find.widgetWithText(TextField, label);
+      await tester.scrollUntilVisible(field, 200, scrollable: vertical);
+      await tester.enterText(field, value);
     }
 
-    await fill('Make', 'Volkswagen');
+    // Picking the brand logo fills in the make.
+    expect(find.text('Photos'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volkswagen'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.widgetWithText(TextField, 'Make'))
+          .controller!
+          .text,
+      'Volkswagen',
+    );
     await fill('Model', 'Golf 7');
     await fill('Year', '2018');
     await fill('Plate number', 'AA 482 TR');
+    // Close the keyboard so the form does not scroll back to the field.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Choose where the car is parked'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: vertical,
     );
     await tester.ensureVisible(find.text('Choose where the car is parked'));
     await tester.pumpAndSettle();
@@ -181,7 +211,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Publish car'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: vertical,
     );
     await tester.ensureVisible(find.text('Publish car'));
     await tester.pumpAndSettle();
@@ -199,7 +229,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Upcoming handovers'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: vertical,
     );
     expect(find.text('Upcoming handovers'), findsOneWidget);
 

@@ -55,8 +55,9 @@ class _ChatsTabState extends State<ChatsTab> {
         .take(20)
         .toList();
     return SafeArea(
+      bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
         children: [
           Text(
             context.tr('tab_chat'),

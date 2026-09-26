@@ -58,6 +58,7 @@ begin
   assert (select count(*) from search_cars(41.3275, 19.8187, s, s + interval '3 days')) = 1, 'car found';
   assert (select count(*) from search_cars(40.4661, 19.4914, s, s + interval '3 days')) = 0, 'not in Vlora';
   select id into car from search_cars(41.3275, 19.8187, s, s + interval '3 days');
+  assert (select photos from search_cars(41.3275, 19.8187, s, s + interval '3 days') limit 1) = '{}'::text[], 'photos returned';
   perform pg_temp.expect_error(format('select request_booking(%L, %L, %L, 2000)', car, s, s + interval '3 days'), 'offer_too_low');
   perform pg_temp.expect_error(format('select request_booking(%L, %L, %L, 3000)', car, s, s + interval '1 day'), 'min_days');
   bk := request_booking(car, s, s + interval '3 days', 2700, 'delivery', 'cash', 'Rruga e Kavajës 10', '', 'qira20');

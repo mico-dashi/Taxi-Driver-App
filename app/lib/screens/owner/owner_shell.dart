@@ -28,6 +28,8 @@ class _OwnerShellState extends State<OwnerShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // The glass menu floats over the content.
+      extendBody: true,
       body: IndexedStack(
         index: _tab,
         children: [
@@ -92,6 +94,7 @@ class _EarningsTabState extends State<EarningsTab> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: RefreshIndicator(
         onRefresh: () async {
           setState(() {
@@ -104,7 +107,7 @@ class _EarningsTabState extends State<EarningsTab> {
           builder: (context, snap) {
             final e = snap.data;
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
               children: [
                 Text(
                   context.tr('tab_earnings'),
@@ -280,7 +283,7 @@ class OwnerAccountTab extends StatelessWidget {
     final user = context.watch<AppState>().user;
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
         children: [
           Row(
             children: [

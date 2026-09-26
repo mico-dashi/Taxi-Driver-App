@@ -12,6 +12,7 @@ import '../../state/app_state.dart';
 import '../../widgets/car_art.dart';
 import '../../widgets/common.dart';
 import '../../widgets/design.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/map_widgets.dart';
 import '../../widgets/rental_widgets.dart';
 import 'book_car_screen.dart';
@@ -98,7 +99,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
                 children: [
                   _hero(width),
                   CardBox(
@@ -134,11 +135,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                                 ],
                               ),
                             ),
-                            FavoriteButton(
-                              carId: car.id,
-                              size: 44,
-                              color: AppColors.surfaceHigh,
-                            ),
+                            FavoriteButton(carId: car.id, size: 44),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -185,7 +182,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 1.55,
+                    childAspectRatio: 1.3,
                     children: [
                       SpecTile(
                         icon: Icons.local_gas_station_outlined,
@@ -346,12 +343,18 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            border: Border(top: BorderSide(color: AppColors.surface)),
+      extendBody: true,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        child: Glass(
+          radius: 34,
+          blur: 26,
+          strength: 1.15,
+          padding: EdgeInsets.fromLTRB(
+            12,
+            12,
+            12,
+            12 + MediaQuery.paddingOf(context).bottom * 0.5,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -399,6 +402,12 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   }
 
   Widget _hero(double width) {
+    if (car.photos.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 14),
+        child: PhotoGallery(photos: car.photos, height: 260),
+      );
+    }
     final carW = (width - 24).clamp(260.0, 440.0);
     return SizedBox(
       height: carW * 0.4 * 1.32 + 36,

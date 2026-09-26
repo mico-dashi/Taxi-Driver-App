@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -684,6 +686,74 @@ class CarArt extends StatelessWidget {
           Positioned(left: 0, top: 0, child: car),
         ],
       ),
+    );
+  }
+}
+
+final _dataUriCache = <String, Uint8List>{};
+
+Uint8List _bytesOf(String dataUri) => _dataUriCache.putIfAbsent(
+  dataUri,
+  () => base64Decode(dataUri.substring(dataUri.indexOf(',') + 1)),
+);
+
+/// One car photo from a URL or a data: URI, cropped to fill its box.
+class CarPhoto extends StatelessWidget {
+  const CarPhoto(this.src, {super.key, this.fit = BoxFit.cover, this.fallback});
+
+  final String src;
+  final BoxFit fit;
+  final Widget? fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget error(BuildContext c, Object e, StackTrace? s) =>
+        fallback ?? const ColoredBox(color: Color(0xFF1A1B1D));
+    if (src.startsWith('data:')) {
+      return Image.memory(
+        _bytesOf(src),
+        fit: fit,
+        gaplessPlayback: true,
+        errorBuilder: error,
+      );
+    }
+    return Image.network(
+      src,
+      fit: fit,
+      gaplessPlayback: true,
+      errorBuilder: error,
+      loadingBuilder: (c, child, progress) =>
+          progress == null ? child : const ColoredBox(color: Color(0x14FFFFFF)),
+    );
+  }
+}
+
+/// The car's cover image: its first photo when the owner uploaded one,
+/// otherwise the drawing in the car's colour.
+class CarImage extends StatelessWidget {
+  const CarImage({
+    super.key,
+    required this.car,
+    required this.width,
+    this.height,
+    this.reflection = false,
+  });
+
+  final Car car;
+  final double width;
+  final double? height;
+  final bool reflection;
+
+  @override
+  Widget build(BuildContext context) {
+    final drawing = Center(
+      child: CarShowcase(car: car, width: width, reflection: reflection),
+    );
+    if (car.photos.isEmpty) return drawing;
+    return SizedBox(
+      width: double.infinity,
+      height: height,
+      child: CarPhoto(car.photos.first, fallback: drawing),
     );
   }
 }

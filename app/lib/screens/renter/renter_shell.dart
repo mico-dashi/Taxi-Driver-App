@@ -21,6 +21,8 @@ class _RenterShellState extends State<RenterShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // The glass menu floats over the content.
+      extendBody: true,
       body: IndexedStack(
         index: _tab,
         children: [

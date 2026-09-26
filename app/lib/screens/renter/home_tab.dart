@@ -11,6 +11,7 @@ import '../../services/pricing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
 import '../../widgets/design.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/rental_widgets.dart';
 import '../common/where_to_sheet.dart';
 import 'car_detail_screen.dart';
@@ -27,6 +28,7 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   String? _category;
+  String? _brand;
   Future<List<Car>>? _nearby;
   String? _nearbyKey;
 
@@ -82,11 +84,16 @@ class _HomeTabState extends State<HomeTab> {
   void _open(Car car) => Navigator.of(context)
       .push(MaterialPageRoute<void>(builder: (_) => CarDetailScreen(car: car)));
 
-  List<Car> _chosen(AppState app, List<Car> cars) => switch (_category) {
-    null => cars,
-    _favorites => cars.where((c) => app.isFavorite(c.id)).toList(),
-    final id => cars.where((c) => c.categoryId == id).toList(),
-  };
+  List<Car> _chosen(AppState app, List<Car> cars) => [
+    for (final c in cars)
+      if ((_brand == null || isMake(c, _brand!)) &&
+          switch (_category) {
+            null => true,
+            _favorites => app.isFavorite(c.id),
+            final id => c.categoryId == id,
+          })
+        c,
+  ];
 
   /// Best rated cars with the most rentals first.
   static List<Car> _trending(List<Car> cars) {
@@ -117,7 +124,7 @@ class _HomeTabState extends State<HomeTab> {
             final cars = snap.data;
             final chosen = cars == null ? const <Car>[] : _chosen(app, cars);
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 130),
               children: [
                 Row(
                   children: [
@@ -190,12 +197,22 @@ class _HomeTabState extends State<HomeTab> {
                   CardBox(child: Text(context.tr('no_cars_found'))),
                 ] else ...[
                   SectionHeader(
+                    context.tr('brands'),
+                    action: context.tr('see_all'),
+                    onAction: _search,
+                  ),
+                  BrandFilterRow(
+                    makes: makesOf(cars),
+                    selected: _brand,
+                    onSelect: (m) => setState(() => _brand = m),
+                  ),
+                  SectionHeader(
                     context.tr('top_trends'),
                     action: context.tr('see_all'),
                     onAction: _search,
                   ),
                   SizedBox(
-                    height: 232,
+                    height: 250,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       clipBehavior: Clip.none,
@@ -333,12 +350,10 @@ class _SearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Glass(
+      radius: 28,
+      grouped: true,
       padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(26),
-      ),
       child: Row(
         children: [
           Expanded(
@@ -362,16 +377,20 @@ class _SearchCard extends StatelessWidget {
             label: context.tr('search_cars'),
             excludeSemantics: true,
             child: Material(
-              color: AppColors.primary,
+              type: MaterialType.transparency,
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: onSearch,
-                child: Container(
-                  width: 56,
-                  height: 56,
+                child: Ink(
+                  width: 58,
+                  height: 58,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    gradient: redDroplet,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.primary.withValues(alpha: 0.4),
@@ -403,9 +422,10 @@ class _SearchCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceHigh,
+                decoration: BoxDecoration(
+                  color: const Color(0x26000000),
                   shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.glassEdge),
                 ),
                 child: Icon(icon, size: 20, color: AppColors.ink),
               ),
@@ -450,16 +470,11 @@ class _PromoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Glass(
+      radius: 26,
+      tint: AppColors.primary,
+      grouped: true,
       padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF8E0310), AppColors.primary],
-        ),
-      ),
       child: Row(
         children: [
           Expanded(

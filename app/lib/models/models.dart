@@ -107,6 +107,9 @@ class Car {
   final int trips;
   final bool listed;
 
+  /// Photo URLs (or data: URIs in demo mode), first one is the cover.
+  final List<String> photos;
+
   const Car({
     required this.id,
     required this.ownerId,
@@ -133,6 +136,7 @@ class Car {
     this.rating = 5.0,
     this.trips = 0,
     this.listed = true,
+    this.photos = const [],
   });
 
   String get title => '$make $model';
@@ -144,6 +148,7 @@ class Car {
     Place? location,
     bool? listed,
     int? pricePerDay,
+    List<String>? photos,
   }) => Car(
     id: id ?? this.id,
     ownerId: ownerId ?? this.ownerId,
@@ -170,6 +175,7 @@ class Car {
     rating: rating,
     trips: trips,
     listed: listed ?? this.listed,
+    photos: photos ?? this.photos,
   );
 }
 

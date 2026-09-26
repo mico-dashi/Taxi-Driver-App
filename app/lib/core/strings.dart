@@ -389,6 +389,15 @@ class Strings {
     'open_car': 'Hap makinën',
     'slide_to_book': 'Rezervo tani',
     'where_when': 'Ku dhe kur?',
+    'photos': 'Fotot',
+    'photos_hint': 'Shtoni deri në 8 foto të makinës. E para del si kopertinë.',
+    'add_photo': 'Shto foto',
+    'cover': 'Kopertina',
+    'remove_photo': 'Hiq foton',
+    'brand': 'Marka',
+    'brands': 'Markat',
+    'all_brands': 'Të gjitha',
+    'photos_count': '{n} foto',
   };
 
   static const en = <String, String>{
@@ -782,5 +791,14 @@ class Strings {
     'open_car': 'Open car',
     'slide_to_book': 'Book now',
     'where_when': 'Where and when?',
+    'photos': 'Photos',
+    'photos_hint': 'Add up to 8 photos of the car. The first one is the cover.',
+    'add_photo': 'Add photo',
+    'cover': 'Cover',
+    'remove_photo': 'Remove photo',
+    'brand': 'Brand',
+    'brands': 'Brands',
+    'all_brands': 'All',
+    'photos_count': '{n} photos',
   };
 }

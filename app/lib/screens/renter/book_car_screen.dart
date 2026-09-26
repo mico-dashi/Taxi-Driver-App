@@ -8,6 +8,7 @@ import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/rental_widgets.dart';
 import '../common/booking_screen.dart';
 import '../common/payment_widgets.dart';
@@ -399,12 +400,11 @@ class _BookCarScreenState extends State<BookCarScreen> {
   Widget _bottomBar() {
     final app = context.watch<AppState>();
     final tooShort = rentalDays(app.searchStart, app.searchEnd) < car.minDays;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
+    return Glass(
+      radius: 30,
+      blur: 26,
+      strength: 1.15,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: Row(
         children: [
           Expanded(
