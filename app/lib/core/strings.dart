@@ -406,6 +406,7 @@ class Strings {
     'contact_phone': 'Numri i celularit (p.sh. 069 123 4567)',
     'contact_phone_desc':
         'Pronari ose qiramarrësi ju telefonon në këtë numër për dorëzimin.',
+    'otp_subtitle_email': 'Ju dërguam një email në {phone}. Shkruani kodin 6-shifror, ose hapni linkun e email-it në këtë shfletues.',
   };
 
   static const en = <String, String>{
@@ -815,5 +816,6 @@ class Strings {
     'contact_phone': 'Mobile number (e.g. 069 123 4567)',
     'contact_phone_desc':
         'The owner or renter calls you on this number for the handover.',
+    'otp_subtitle_email': 'We emailed {phone}. Enter the 6-digit code, or open the link in the email in this browser.',
   };
 }

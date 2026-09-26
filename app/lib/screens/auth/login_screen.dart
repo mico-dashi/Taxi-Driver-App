@@ -312,7 +312,12 @@ class _OtpScreenState extends State<OtpScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              context.tr('otp_subtitle', {'phone': widget.phone}),
+              context.tr(
+                widget.phone.contains('@')
+                    ? 'otp_subtitle_email'
+                    : 'otp_subtitle',
+                {'phone': widget.phone},
+              ),
               style: const TextStyle(fontSize: 15, color: AppColors.inkSoft),
             ),
             const SizedBox(height: 28),

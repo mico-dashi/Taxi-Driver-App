@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -87,7 +88,15 @@ class SupabaseBackend implements Backend {
   @override
   Future<void> sendOtp(String contact) => _guard(
     () => contact.contains('@')
-        ? _db.auth.signInWithOtp(email: contact)
+        ? _db.auth.signInWithOtp(
+            email: contact,
+            // Until the email template shows the 6-digit code, Supabase's
+            // default email holds a login link: on the web it brings the
+            // user back to this page, signed in.
+            emailRedirectTo: kIsWeb
+                ? '${Uri.base.origin}${Uri.base.path}'
+                : null,
+          )
         : _db.auth.signInWithOtp(phone: contact),
   );
 
