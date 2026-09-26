@@ -16,7 +16,7 @@ It comes with a **backend** (database, security rules, realtime updates) that ma
 **Liquid glass** in racing red `#EC0618`, graphite `#212325` and near-black `#010101`, with the Manrope font.
 - Every page sits on a dark backdrop with soft red light. Cards, buttons, the floating menu, the slide button and bottom bars are frosted glass: the background is blurred and brightened, with a light sheen and a bright rim.
 - **Car brands**: 32 brand logos (Volkswagen, Mercedes-Benz, BMW, Audi, Toyota, Hyundai, Kia, Škoda, Renault, Dacia, Fiat, Opel, Ford, Peugeot, Jeep, Porsche, Tesla and more). They appear as a brand filter on home and search, as badges on every car, and as a brand picker when owners add a car. Logos come from [Simple Icons](https://simpleicons.org) (CC0). They are trademarks of their owners and are shown only to identify a car's make.
-- **Real photos**: owners add up to 8 photos per car. Cards show the cover photo under a glass info panel, and the car page has a swipeable gallery. Cars without photos show their brand logo glowing over the model name.
+- **Real photos**: owners add up to 8 photos per car. The 15 demo cars show real photos of their models from Wikimedia Commons (CC BY-SA, credited in the app under Profile → Photo credits). Cards show the cover photo under a glass info panel, and the car page has a swipeable gallery. Cars without photos show their brand logo glowing over the model name.
 - Welcome screen with a hero car and slide-to-start, a "Top trends" carousel, a "Choose a car" list, and a car page with a spec grid and slide to "Book now".
 
 ## How it works
@@ -49,6 +49,8 @@ flutter run            # Android / iPhone, or: flutter run -d chrome
 **Without a computer:** the **CI** workflow tests everything and builds an **Android APK** (Actions tab → latest run → *Artifacts* → `rent-al-android`). The **Web demo (GitHub Pages)** workflow publishes the web app with the real map at **https://mico-dashi.github.io/Taxi-Driver-App/**. One-time setup: **Settings → Pages → Source: GitHub Actions**; it updates on every change to `main`.
 
 ## Go live
+
+The live backend is already set up (Supabase project `rent-al`). The remaining steps that need your accounts are listed at the top of the go-live guide.
 
 See **[docs/GOING_LIVE.md](docs/GOING_LIVE.md)**: backend setup, SMS login, approving cars, insurance and legal points for renting cars in Albania, payments, and publishing to the stores.
 

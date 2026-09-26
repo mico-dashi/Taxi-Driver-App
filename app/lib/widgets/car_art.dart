@@ -723,6 +723,9 @@ class CarPhoto extends StatelessWidget {
       src,
       fit: fit,
       gaplessPlayback: true,
+      // On the web, fall back to a plain <img> when the photo host does not
+      // allow cross-origin reads.
+      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
       errorBuilder: error,
       loadingBuilder: (c, child, progress) =>
           progress == null ? child : const ColoredBox(color: Color(0x14FFFFFF)),

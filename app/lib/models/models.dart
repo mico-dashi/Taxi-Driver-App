@@ -20,13 +20,14 @@ class UserProfile {
 
   String get firstName => name.trim().split(' ').first;
 
-  UserProfile copyWith({String? name, UserRole? role}) => UserProfile(
-    id: id,
-    phone: phone,
-    name: name ?? this.name,
-    role: role ?? this.role,
-    rating: rating,
-  );
+  UserProfile copyWith({String? name, UserRole? role, String? phone}) =>
+      UserProfile(
+        id: id,
+        phone: phone ?? this.phone,
+        name: name ?? this.name,
+        role: role ?? this.role,
+        rating: rating,
+      );
 }
 
 class Place {

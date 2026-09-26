@@ -52,11 +52,23 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   Future<void> _continue() async {
-    final phone = normalizeAlbanianPhone(_phone.text);
-    if (phone == null) {
-      setState(() => _error = context.tr('invalid_phone'));
-      return;
+    final String? phone;
+    if (AppConfig.loginWithEmail) {
+      final email = _phone.text.trim().toLowerCase();
+      phone = _emailPattern.hasMatch(email) ? email : null;
+      if (phone == null) {
+        setState(() => _error = context.tr('invalid_email'));
+        return;
+      }
+    } else {
+      phone = normalizeAlbanianPhone(_phone.text);
+      if (phone == null) {
+        setState(() => _error = context.tr('invalid_phone'));
+        return;
+      }
     }
     setState(() {
       _loading = true;
@@ -67,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.of(
         context,
-      ).push(MaterialPageRoute<void>(builder: (_) => OtpScreen(phone: phone)));
+      ).push(MaterialPageRoute<void>(builder: (_) => OtpScreen(phone: phone!)));
     } catch (e) {
       if (mounted) showError(context, e);
     } finally {
@@ -108,41 +120,66 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              context.tr('login_subtitle'),
+              context.tr(
+                AppConfig.loginWithEmail
+                    ? 'login_subtitle_email'
+                    : 'login_subtitle',
+              ),
               style: const TextStyle(fontSize: 15, color: AppColors.inkSoft),
             ),
             const SizedBox(height: 28),
-            TextField(
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              autofocus: true,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9 +]')),
-              ],
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              decoration: InputDecoration(
-                hintText: '69 123 4567',
-                errorText: _error,
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.only(left: 16, right: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('🇦🇱', style: TextStyle(fontSize: 20)),
-                      SizedBox(width: 8),
-                      Text(
-                        AppConfig.phonePrefix,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+            if (AppConfig.loginWithEmail)
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+                autofillHints: const [AutofillHints.email],
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'emri@email.com',
+                  errorText: _error,
+                  prefixIcon: const Icon(Icons.mail_outline_rounded),
+                ),
+                onSubmitted: (_) => _continue(),
+              )
+            else
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                autofocus: true,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9 +]')),
+                ],
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  hintText: '69 123 4567',
+                  errorText: _error,
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.only(left: 16, right: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🇦🇱', style: TextStyle(fontSize: 20)),
+                        SizedBox(width: 8),
+                        Text(
+                          AppConfig.phonePrefix,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
+                onSubmitted: (_) => _continue(),
               ),
-              onSubmitted: (_) => _continue(),
-            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loading ? null : _continue,

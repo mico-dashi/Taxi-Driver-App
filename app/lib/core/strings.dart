@@ -398,6 +398,14 @@ class Strings {
     'brands': 'Markat',
     'all_brands': 'Të gjitha',
     'photos_count': '{n} foto',
+    'photo_credits': 'Kreditet e fotove',
+    'photo_credits_desc': 'Fotot e makinave demo janë nga Wikimedia Commons, me licencë Creative Commons (CC BY-SA). Prekni një foto për autorin dhe licencën.',
+    'login_subtitle_email':
+        'Shkruani email-in tuaj. Do t\'ju dërgojmë një kod 6-shifror.',
+    'invalid_email': 'Shkruani një adresë email të vlefshme',
+    'contact_phone': 'Numri i celularit (p.sh. 069 123 4567)',
+    'contact_phone_desc':
+        'Pronari ose qiramarrësi ju telefonon në këtë numër për dorëzimin.',
   };
 
   static const en = <String, String>{
@@ -800,5 +808,12 @@ class Strings {
     'brands': 'Brands',
     'all_brands': 'All',
     'photos_count': '{n} photos',
+    'photo_credits': 'Photo credits',
+    'photo_credits_desc': 'The demo car photos are from Wikimedia Commons under Creative Commons licences (CC BY-SA). Tap a photo for its author and licence.',
+    'login_subtitle_email': 'Enter your email. We\'ll send you a 6-digit code.',
+    'invalid_email': 'Enter a valid email address',
+    'contact_phone': 'Mobile number (e.g. 069 123 4567)',
+    'contact_phone_desc':
+        'The owner or renter calls you on this number for the handover.',
   };
 }

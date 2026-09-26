@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../app.dart';
 import '../../core/config.dart';
+import '../../core/demo_photos.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
@@ -114,6 +115,12 @@ class SettingsTiles extends StatelessWidget {
             applicationVersion: '1.0.0',
             applicationLegalese: context.tr('legal_text'),
           ),
+        ),
+        const SizedBox(height: 8),
+        ProfileTile(
+          icon: Icons.photo_library_outlined,
+          title: context.tr('photo_credits'),
+          onTap: () => showPhotoCredits(context),
         ),
         const SizedBox(height: 8),
         ProfileTile(
@@ -391,3 +398,45 @@ Future<void> showSafetySheet(BuildContext context) =>
         );
       },
     );
+
+/// Credits for the demo car photos (Wikimedia Commons, CC BY-SA).
+void showPhotoCredits(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(ctx).height * 0.8,
+        ),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          children: [
+            Text(
+              ctx.tr('photo_credits'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              ctx.tr('photo_credits_desc'),
+              style: const TextStyle(color: AppColors.inkSoft),
+            ),
+            const SizedBox(height: 8),
+            for (final (_, credit) in demoCarPhotos.values)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(credit.file, style: const TextStyle(fontSize: 13)),
+                subtitle: Text('Wikimedia Commons · ${credit.license}'),
+                trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                onTap: () => launchUrl(
+                  Uri.parse(credit.pageUrl),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

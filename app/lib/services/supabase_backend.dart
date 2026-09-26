@@ -85,23 +85,44 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<void> sendOtp(String phone) =>
-      _guard(() => _db.auth.signInWithOtp(phone: phone));
+  Future<void> sendOtp(String contact) => _guard(
+    () => contact.contains('@')
+        ? _db.auth.signInWithOtp(email: contact)
+        : _db.auth.signInWithOtp(phone: contact),
+  );
 
   @override
-  Future<UserProfile> verifyOtp(String phone, String code) => _guard(() async {
-    await _db.auth.verifyOTP(type: OtpType.sms, phone: phone, token: code);
-    return _loadProfile();
-  });
+  Future<UserProfile> verifyOtp(String contact, String code) =>
+      _guard(() async {
+        if (contact.contains('@')) {
+          await _db.auth.verifyOTP(
+            type: OtpType.email,
+            email: contact,
+            token: code,
+          );
+        } else {
+          await _db.auth.verifyOTP(
+            type: OtpType.sms,
+            phone: contact,
+            token: code,
+          );
+        }
+        return _loadProfile();
+      });
 
   @override
   Future<UserProfile> saveProfile({
     required String name,
     required UserRole role,
+    String? phone,
   }) => _guard(() async {
     await _db
         .from('profiles')
-        .update({'full_name': name, 'role': role.name})
+        .update({
+          'full_name': name,
+          'role': role.name,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
+        })
         .eq('id', currentUserId);
     return _loadProfile();
   });

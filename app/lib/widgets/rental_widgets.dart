@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/format.dart';
 import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
 import '../services/pricing.dart';
+
 import '../core/brands.dart';
+import '../core/demo_photos.dart';
 import 'car_art.dart';
 import 'common.dart';
 import 'design.dart';
@@ -698,6 +701,29 @@ class _PhotoGalleryState extends State<PhotoGallery> {
               onPageChanged: (p) => setState(() => _page = p),
               itemBuilder: (_, i) => CarPhoto(widget.photos[i]),
             ),
+            if (creditFor(widget.photos[_page]) case final credit?)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: GestureDetector(
+                  onTap: () => launchUrl(
+                    Uri.parse(credit.pageUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Glass(
+                    radius: 12,
+                    shadow: false,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      '📷 Wikimedia Commons · ${credit.license}',
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ),
+                ),
+              ),
             if (n > 1)
               Positioned(
                 bottom: 12,

@@ -13,13 +13,20 @@ abstract class Backend {
 
   // ---------------------------------------------------------------- auth
   Future<UserProfile?> restoreSession();
-  Future<void> sendOtp(String phone);
+
+  /// Sends a 6-digit login code to [contact]: a +355 phone number (SMS) or
+  /// an email address.
+  Future<void> sendOtp(String contact);
 
   /// Returns the profile; `name` is empty for brand new users.
-  Future<UserProfile> verifyOtp(String phone, String code);
+  Future<UserProfile> verifyOtp(String contact, String code);
+
+  /// [phone] is the contact number shown to the other side of a booking;
+  /// only needed when the user logged in by email.
   Future<UserProfile> saveProfile({
     required String name,
     required UserRole role,
+    String? phone,
   });
   Future<void> signOut();
 

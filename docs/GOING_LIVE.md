@@ -2,6 +2,32 @@
 
 The app works out of the box in **demo mode**. To take real bookings you need a backend, SMS login, a map provider and store accounts, and you must settle the insurance and legal questions below **before** the first real rental.
 
+## Status: the live backend is set up
+
+- **Supabase project `rent-al`** (Frankfurt, free plan): https://cihhvvhhkgqgqbuwhjwh.supabase.co
+- All migrations are applied (tables, security rules, booking functions, `car-photos` storage bucket, email login) and the seed is loaded (categories, QIRA20). The Supabase security advisor findings are fixed.
+- Unanswered requests expire automatically every 15 minutes (pg_cron job `expire-requests`).
+- `app/config/live.json` holds the project URL and its **publishable** key. It is safe to ship: the database rules protect the data. The CI and Pages workflows build the live app with it:
+  - `rent-al.apk` is the live Android app, and `rent-al-demo.apk` is the offline demo.
+  - GitHub Pages serves the live web app at https://mico-dashi.github.io/Taxi-Driver-App/ and the demo at `/demo/`.
+- **Login**: live users log in with a 6-digit code sent by **email** (free), then add their mobile number for handovers. When an SMS provider is connected, build with `--dart-define=LOGIN=phone` to switch to SMS.
+
+### What only you can do (about 10 minutes)
+
+1. **Email code template.** In the Supabase dashboard, go to Authentication → Emails → Templates. Replace the body of **Magic Link** *and* **Confirm signup** with:
+   ```html
+   <h2>Kodi juaj Rent AL</h2>
+   <p>Shkruani këtë kod në aplikacion: <strong>{{ .Token }}</strong></p>
+   <p>Your Rent AL code: <strong>{{ .Token }}</strong></p>
+   ```
+2. **Email sending.** Supabase's built-in mail service only sends a few emails per hour, which is enough for testing but not for real users. Add a free SMTP provider (Resend, Brevo or Mailgun) under Authentication → Emails → SMTP settings.
+3. **Site URL.** Under Authentication → URL Configuration, set the Site URL to `https://mico-dashi.github.io/Taxi-Driver-App/`.
+4. **GitHub Actions and Pages.** Fix the Actions block on your GitHub account (see the pull request comment), then set Settings → Pages → Source to **GitHub Actions**. The live web app and the APKs are then built on every push to `main`.
+5. **Become admin.** Log in to the live app once, then run this in the SQL editor:
+   `update profiles set role = 'admin' where email = 'you@example.com';`
+   Approve each car after checking its papers:
+   `update cars set approved = true where plate = 'AA 482 TR';`
+
 ## 1. Backend (Supabase), about 15 minutes
 
 1. Create a project at [supabase.com](https://supabase.com). Choose the **Frankfurt (eu-central-1)** region, the closest to Albania.

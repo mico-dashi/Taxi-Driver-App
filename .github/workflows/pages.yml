@@ -1,7 +1,7 @@
-# Publishes the demo web app (with the real OpenStreetMap map and street
-# routes) to https://<owner>.github.io/<repo>/
+# Publishes the live web app to https://<owner>.github.io/<repo>/ and the
+# offline demo to https://<owner>.github.io/<repo>/demo/
 # One-time setup: repository Settings -> Pages -> Source: "GitHub Actions".
-name: Web demo (GitHub Pages)
+name: Web app (GitHub Pages)
 
 on:
   push:
@@ -29,10 +29,17 @@ jobs:
         with:
           flutter-version: 3.47.5
           cache: true
-      - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+      - run: >
+          flutter build web --release --output=../site/demo
+          --base-href "/${{ github.event.repository.name }}/demo/"
+      - run: >
+          flutter build web --release --output=build/live
+          --dart-define-from-file=config/live.json
+          --base-href "/${{ github.event.repository.name }}/"
+      - run: cp -r build/live/. ../site/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: app/build/web
+          path: site
 
   deploy:
     needs: build

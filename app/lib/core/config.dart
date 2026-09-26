@@ -67,6 +67,11 @@ class AppConfig {
   /// Default pickup / return hour for new searches.
   static const defaultPickupHour = 10;
 
+  /// Live login method: email codes by default (free); `--dart-define=LOGIN=phone`
+  /// switches to SMS once an SMS provider is connected in Supabase.
+  static bool get loginWithEmail =>
+      !isDemo && const String.fromEnvironment('LOGIN') != 'phone';
+
   /// Demo mode OTP code.
   static const demoOtp = '123456';
 }

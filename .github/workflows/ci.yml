@@ -62,19 +62,22 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
-      # Without the SUPABASE_URL / SUPABASE_KEY repository secrets this
-      # builds the offline demo, perfect for showing to taxi drivers.
-      - run: >
-          flutter build apk --release
-          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-          --dart-define=SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+      # Live app: talks to the Rent AL Supabase project (config/live.json
+      # holds the project URL and its publishable key, safe to ship).
+      - run: flutter build apk --release --dart-define-from-file=config/live.json
+      - run: cp build/app/outputs/flutter-apk/app-release.apk rent-al.apk
+      # Demo app: everything simulated on the phone, for showing to owners.
+      - run: flutter build apk --release
+      - run: cp build/app/outputs/flutter-apk/app-release.apk rent-al-demo.apk
       - uses: actions/upload-artifact@v4
         with:
           name: rent-al-android
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            app/rent-al.apk
+            app/rent-al-demo.apk
 
   web:
-    name: Build web demo
+    name: Build web app
     needs: [app]
     runs-on: ubuntu-latest
     defaults:
@@ -86,7 +89,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
-      - run: flutter build web --release
+      - run: flutter build web --release --dart-define-from-file=config/live.json
       - uses: actions/upload-artifact@v4
         with:
           name: rent-al-web

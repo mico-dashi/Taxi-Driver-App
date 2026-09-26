@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config.dart';
+import '../core/demo_photos.dart';
 import '../core/places.dart';
 import '../models/models.dart';
 import 'backend.dart';
@@ -94,25 +95,34 @@ class DemoBackend implements Backend {
   }
 
   @override
-  Future<void> sendOtp(String phone) => Future.delayed(_d(600));
+  Future<void> sendOtp(String contact) => Future.delayed(_d(600));
 
   @override
-  Future<UserProfile> verifyOtp(String phone, String code) async {
+  Future<UserProfile> verifyOtp(String contact, String code) async {
     await Future.delayed(_d(600));
     if (code != AppConfig.demoOtp) {
       throw const BackendException('invalid_code');
     }
-    return _user = UserProfile(id: 'demo-user', phone: phone, name: '');
+    return _user = UserProfile(
+      id: 'demo-user',
+      phone: contact.contains('@') ? '' : contact,
+      name: '',
+    );
   }
 
   @override
   Future<UserProfile> saveProfile({
     required String name,
     required UserRole role,
+    String? phone,
   }) async {
     final user =
         (_user ?? const UserProfile(id: 'demo-user', phone: '', name: ''))
-            .copyWith(name: name, role: role);
+            .copyWith(
+              name: name,
+              role: role,
+              phone: (phone == null || phone.isEmpty) ? null : phone,
+            );
     _user = user;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -201,7 +211,13 @@ class DemoBackend implements Backend {
     );
   }
 
+  /// Demo cars, each with a real photo of its model.
   static List<Car> _seedCars() => [
+    for (final c in _seedCarsRaw())
+      c.copyWith(photos: [?demoCarPhotos[c.id]?.$1]),
+  ];
+
+  static List<Car> _seedCarsRaw() => [
     _car(
       1,
       'Arben Hoxha',

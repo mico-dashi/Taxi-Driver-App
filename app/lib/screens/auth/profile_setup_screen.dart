@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app.dart';
+import '../../core/config.dart';
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
@@ -18,12 +20,19 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _name = TextEditingController();
+  final _phone = TextEditingController();
+
+  /// Email users add a phone so the other side of a booking can call them.
+  bool get _askPhone =>
+      AppConfig.loginWithEmail &&
+      (context.read<AppState>().user?.phone ?? '').isEmpty;
   UserRole _role = UserRole.renter;
   bool _loading = false;
 
   @override
   void dispose() {
     _name.dispose();
+    _phone.dispose();
     super.dispose();
   }
 
@@ -33,10 +42,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       showInfo(context, context.tr('enter_name'));
       return;
     }
+    String? phone;
+    if (_askPhone) {
+      phone = normalizeAlbanianPhone(_phone.text);
+      if (phone == null) {
+        showInfo(context, context.tr('invalid_phone'));
+        return;
+      }
+    }
     setState(() => _loading = true);
     final app = context.read<AppState>();
     try {
-      app.setUser(await app.backend.saveProfile(name: name, role: _role));
+      app.setUser(
+        await app.backend.saveProfile(name: name, role: _role, phone: phone),
+      );
       if (mounted) goHome(context);
     } catch (e) {
       if (mounted) showError(context, e);
@@ -70,6 +89,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 prefixIcon: const Icon(Icons.person_outline_rounded),
               ),
             ),
+            if (_askPhone) ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  hintText: context.tr('contact_phone'),
+                  helperText: context.tr('contact_phone_desc'),
+                  helperMaxLines: 2,
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                ),
+              ),
+            ],
             SectionLabel(context.tr('how_use_app')),
             _RoleCard(
               icon: Icons.search_rounded,
