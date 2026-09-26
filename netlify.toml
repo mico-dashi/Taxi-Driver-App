@@ -1,0 +1,24 @@
+# Free website hosting on Netlify: connect this GitHub repository at
+# https://app.netlify.com -> "Add new site" -> "Import an existing project".
+# Netlify reads these settings, builds the Flutter web app and publishes it.
+[build]
+  command = "bash scripts/netlify-build.sh"
+  publish = "site"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Flutter's engine files never change for a given build: cache them long.
+[[headers]]
+  for = "/canvaskit/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[functions]
+  directory = "netlify/functions"

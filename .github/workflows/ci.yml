@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: 3.47.5
+
+jobs:
+  app:
+    name: Flutter analyze & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+
+  database:
+    name: Supabase schema & ride flow
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./supabase/tests/run_local.sh
+
+  android:
+    name: Build Android APK
+    needs: [app, database]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      # Live app: talks to the Rent AL Supabase project (config/live.json
+      # holds the project URL and its publishable key, safe to ship).
+      - run: flutter build apk --release --dart-define-from-file=config/live.json
+      - run: cp build/app/outputs/flutter-apk/app-release.apk rent-al.apk
+      # Demo app: everything simulated on the phone, for showing to owners.
+      - run: flutter build apk --release
+      - run: cp build/app/outputs/flutter-apk/app-release.apk rent-al-demo.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rent-al-android
+          path: |
+            app/rent-al.apk
+            app/rent-al-demo.apk
+
+  web:
+    name: Build web app
+    needs: [app]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter build web --release --dart-define-from-file=config/live.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rent-al-web
+          path: app/build/web
