@@ -268,7 +268,7 @@ class _BookCarScreenState extends State<BookCarScreen> {
           _pickup == p
               ? Icons.radio_button_checked_rounded
               : Icons.radio_button_off_rounded,
-          color: _pickup == p ? AppColors.ink : AppColors.inkFaint,
+          color: _pickup == p ? AppColors.primary : AppColors.inkFaint,
         ),
       ],
     ),
@@ -340,7 +340,7 @@ class _BookCarScreenState extends State<BookCarScreen> {
                         : context.tr('listed_price'),
                     style: TextStyle(
                       fontSize: 12,
-                      color: below ? AppColors.primaryDark : AppColors.success,
+                      color: below ? AppColors.primaryLight : AppColors.success,
                     ),
                   ),
                 ],
@@ -358,7 +358,7 @@ class _BookCarScreenState extends State<BookCarScreen> {
               tooltip: context.tr('increase'),
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.ink,
+                foregroundColor: Colors.white,
               ),
               onPressed: _offer + 100 <= car.pricePerDay
                   ? () => setState(() => _offer += 100)
@@ -402,7 +402,7 @@ class _BookCarScreenState extends State<BookCarScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.background,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(

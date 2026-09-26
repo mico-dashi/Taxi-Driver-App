@@ -54,7 +54,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           children: [
             Text(
               context.tr('setup_title'),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
@@ -130,10 +130,10 @@ class _RoleCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: selected ? AppColors.primary : AppColors.background,
-              borderRadius: BorderRadius.circular(14),
+              color: selected ? AppColors.primary : AppColors.surfaceHigh,
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon),
+            child: Icon(icon, color: Colors.white),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -162,7 +162,7 @@ class _RoleCard extends StatelessWidget {
             selected
                 ? Icons.radio_button_checked_rounded
                 : Icons.radio_button_off_rounded,
-            color: selected ? AppColors.ink : AppColors.inkFaint,
+            color: selected ? AppColors.primary : AppColors.inkFaint,
           ),
         ],
       ),

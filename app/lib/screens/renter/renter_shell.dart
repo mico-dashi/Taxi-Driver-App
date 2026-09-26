@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/l10n.dart';
-import '../../core/theme.dart';
+import '../../widgets/design.dart';
 import '../common/chats_tab.dart';
 import '../common/profile_widgets.dart';
 import 'home_tab.dart';
@@ -30,31 +30,29 @@ class _RenterShellState extends State<RenterShell> {
           const RenterProfileTab(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primarySoft,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.search_rounded),
-            selectedIcon: const Icon(Icons.manage_search_rounded),
-            label: context.tr('tab_search'),
+      bottomNavigationBar: PillNavBar(
+        index: _tab,
+        onTap: (i) => setState(() => _tab = i),
+        items: [
+          NavItem(
+            Icons.home_outlined,
+            Icons.home_rounded,
+            context.tr('tab_search'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.key_outlined),
-            selectedIcon: const Icon(Icons.key_rounded),
-            label: context.tr('tab_rentals'),
+          NavItem(
+            Icons.key_outlined,
+            Icons.key_rounded,
+            context.tr('tab_rentals'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: const Icon(Icons.chat_bubble_rounded),
-            label: context.tr('tab_chat'),
+          NavItem(
+            Icons.chat_bubble_outline_rounded,
+            Icons.chat_bubble_rounded,
+            context.tr('tab_chat'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline_rounded),
-            selectedIcon: const Icon(Icons.person_rounded),
-            label: context.tr('tab_profile'),
+          NavItem(
+            Icons.person_outline_rounded,
+            Icons.person_rounded,
+            context.tr('tab_profile'),
           ),
         ],
       ),

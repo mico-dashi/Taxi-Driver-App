@@ -6,7 +6,7 @@ import 'core/config.dart';
 import 'core/l10n.dart';
 import 'core/theme.dart';
 import 'models/models.dart';
-import 'screens/auth/login_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 import 'screens/auth/profile_setup_screen.dart';
 import 'screens/owner/owner_shell.dart';
 import 'screens/renter/renter_shell.dart';
@@ -21,7 +21,8 @@ class TaxiApp extends StatelessWidget {
     return MaterialApp(
       title: AppConfig.brandName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       locale: Locale(lang),
       supportedLocales: const [Locale('sq'), Locale('en')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -60,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.background,
       body: Center(child: BrandLogo(size: 88, showName: true)),
     );
   }
@@ -68,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
 /// Decides the first screen for a (possibly logged out) user.
 Widget homeFor(UserProfile? user) {
-  if (user == null) return const LoginScreen();
+  if (user == null) return const WelcomeScreen();
   if (user.name.trim().isEmpty) return const ProfileSetupScreen();
   return user.role == UserRole.owner ? const OwnerShell() : const RenterShell();
 }
@@ -97,32 +98,62 @@ class BrandLogo extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.ink,
-            borderRadius: BorderRadius.circular(size * 0.28),
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(size * 0.3),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.45),
+                blurRadius: size * 0.4,
+              ),
+            ],
           ),
           child: Icon(
-            Icons.car_rental_rounded,
-            color: AppColors.primary,
-            size: size * 0.6,
+            Icons.directions_car_filled_rounded,
+            color: Colors.white,
+            size: size * 0.55,
           ),
         ),
         if (showName) ...[
-          const SizedBox(height: 16),
-          const Text(
-            AppConfig.brandName,
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              color: AppColors.ink,
-            ),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 18),
+          const BrandName(fontSize: 32),
+          const SizedBox(height: 6),
           const Text(
             AppConfig.brandTagline,
-            style: TextStyle(fontSize: 14, color: AppColors.ink),
+            style: TextStyle(fontSize: 14, color: AppColors.inkSoft),
           ),
         ],
       ],
+    );
+  }
+}
+
+/// "Rent AL" with the AL in red.
+class BrandName extends StatelessWidget {
+  const BrandName({super.key, this.fontSize = 20});
+
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = AppConfig.brandName.split(' ');
+    final style = TextStyle(
+      fontSize: fontSize,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.5,
+      color: AppColors.ink,
+    );
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          TextSpan(text: parts.first),
+          if (parts.length > 1)
+            TextSpan(
+              text: ' ${parts.skip(1).join(' ')}',
+              style: const TextStyle(color: AppColors.primary),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -227,7 +227,7 @@ class _PlaceTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: const BoxDecoration(
-                color: AppColors.background,
+                color: AppColors.surfaceHigh,
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 18, color: AppColors.inkSoft),

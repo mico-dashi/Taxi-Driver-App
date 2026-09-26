@@ -13,7 +13,9 @@ import '../../models/models.dart';
 import '../../services/backend.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
+import '../../widgets/car_art.dart';
 import '../../widgets/common.dart';
+import '../../widgets/design.dart';
 import '../../widgets/map_widgets.dart';
 import '../../widgets/rental_widgets.dart';
 import '../chat/chat_screen.dart';
@@ -180,33 +182,41 @@ class _BookingScreenState extends State<BookingScreen> {
           _statusCard(backend),
           const SizedBox(height: 16),
           CardBox(
-            child: Row(
+            child: Column(
               children: [
-                CarBadge.of(b.car, size: 48),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${b.car.title} · ${b.car.year}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-
-                      Wrap(
-                        spacing: 8,
-
-                        runSpacing: 6,
-
+                Center(
+                  child: CarShowcase(car: b.car, width: 250, reflection: false),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    MakeBadge(b.car, size: 40),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Plate(b.car.plate),
+                          Text(
+                            '${b.car.title} · ${b.car.year}',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
 
-                          BookingStatusPill(b.status),
+                          Wrap(
+                            spacing: 8,
+
+                            runSpacing: 6,
+
+                            children: [
+                              Plate(b.car.plate),
+
+                              BookingStatusPill(b.status),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -380,8 +390,8 @@ class _BookingScreenState extends State<BookingScreen> {
         body = context.tr('st_requested_body', {'name': owner});
         actions = [
           const LinearProgressIndicator(
-            color: AppColors.primaryDark,
-            backgroundColor: Colors.white,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surfaceHigh,
           ),
         ];
       case (BookingStatus.requested, true):
@@ -569,7 +579,7 @@ class _BookingScreenState extends State<BookingScreen> {
             onPressed: () => setState(() => _stars = i),
             icon: Icon(
               i <= _stars ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: AppColors.primaryDark,
+              color: AppColors.primaryLight,
             ),
           ),
       ],
@@ -676,7 +686,7 @@ Future<int?> showCounterSheet(BuildContext context, Booking b) {
                       tooltip: context.tr('increase'),
                       style: IconButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.ink,
+                        foregroundColor: Colors.white,
                       ),
                       onPressed: () => setSheet(() => price += 100),
                       icon: const Icon(Icons.add_rounded),

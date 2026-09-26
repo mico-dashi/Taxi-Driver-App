@@ -8,8 +8,8 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
+import '../../widgets/car_art.dart';
 import '../../widgets/common.dart';
-import '../../widgets/map_widgets.dart';
 import '../../widgets/rental_widgets.dart';
 import '../common/where_to_sheet.dart';
 
@@ -151,10 +151,18 @@ class _CarFormScreenState extends State<CarFormScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           children: [
+            // Live preview in the chosen colour and body style.
             Center(
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: CarTopView(color: Color(_color), size: 150),
+              child: CarArt(
+                color: Color(_color),
+                shape: shapeForListing(
+                  categoryId: _category,
+                  make: _make.text,
+                  model: _model.text,
+                  seats: _seats,
+                ),
+                width: 280,
+                redCalipers: _category == 'luxury',
               ),
             ),
             const SizedBox(height: 12),
@@ -177,7 +185,7 @@ class _CarFormScreenState extends State<CarFormScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: _color == e.key
-                                ? AppColors.ink
+                                ? AppColors.primary
                                 : AppColors.border,
                             width: _color == e.key ? 3 : 1,
                           ),
@@ -190,6 +198,7 @@ class _CarFormScreenState extends State<CarFormScreen> {
             SectionLabel(context.tr('car_details')),
             TextField(
               controller: _make,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: context.tr('make'),
                 hintText: 'Volkswagen',
@@ -198,6 +207,7 @@ class _CarFormScreenState extends State<CarFormScreen> {
             const SizedBox(height: 10),
             TextField(
               controller: _model,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: context.tr('model'),
                 hintText: 'Golf 7',

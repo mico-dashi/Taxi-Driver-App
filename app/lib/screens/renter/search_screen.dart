@@ -98,107 +98,148 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: InkWell(
-          onTap: _editPlace,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                app.effectiveSearchPlace.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  CircleIconButton(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Material(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      child: InkWell(
+                        onTap: _editPlace,
+                        borderRadius: BorderRadius.circular(24),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                app.effectiveSearchPlace.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '${context.dayTime(app.searchStart)} → ${context.dayTime(app.searchEnd)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.inkSoft,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CircleIconButton(
+                    icon: Icons.calendar_month_outlined,
+                    tooltip: context.tr('choose_dates'),
+                    onTap: _editDates,
+                  ),
+                  const SizedBox(width: 8),
+                  CircleIconButton(
+                    icon: _showMap
+                        ? Icons.view_list_rounded
+                        : Icons.map_outlined,
+                    tooltip: context.tr(_showMap ? 'list_view' : 'map_view'),
+                    color: _showMap ? AppColors.primary : AppColors.surface,
+                    onTap: () => setState(() => _showMap = !_showMap),
+                  ),
+                ],
               ),
-              Text(
-                '${context.dayTime(app.searchStart)} → ${context.dayTime(app.searchEnd)}',
-                style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+            ),
+            Expanded(child: _body()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _body() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            children: [
+              _chip(context.tr('all_cars'), _category == null, () {
+                setState(() {
+                  _category = null;
+                  _load();
+                });
+              }),
+              for (final c in Pricing.categories)
+                _chip(context.tr(c.nameKey), _category == c.id, () {
+                  setState(() {
+                    _category = c.id;
+                    _load();
+                  });
+                }),
+              _chip(
+                context.tr('automatic'),
+                _automaticOnly,
+                () => setState(() => _automaticOnly = !_automaticOnly),
+              ),
+              PopupMenuButton<_Sort>(
+                initialValue: _sort,
+                onSelected: (s) => setState(() => _sort = s),
+                itemBuilder: (context) => [
+                  for (final s in _Sort.values)
+                    PopupMenuItem(
+                      value: s,
+                      child: Text(context.tr('sort_${s.name}')),
+                    ),
+                ],
+                child: Chip(
+                  avatar: const Icon(Icons.sort_rounded, size: 16),
+                  label: Text(context.tr('sort_${_sort.name}')),
+                ),
               ),
             ],
           ),
         ),
-        actions: [
-          IconButton(
-            tooltip: context.tr('choose_dates'),
-            onPressed: _editDates,
-            icon: const Icon(Icons.calendar_month_outlined),
+        Expanded(
+          child: FutureBuilder<List<Car>>(
+            future: _results,
+            builder: (context, snap) {
+              if (snap.hasError) {
+                return Center(
+                  child: Text(context.trError(errorCode(snap.error!))),
+                );
+              }
+              if (!snap.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final cars = _filtered(snap.data!);
+              return _showMap ? _mapView(cars) : _listView(cars);
+            },
           ),
-          IconButton(
-            tooltip: context.tr(_showMap ? 'list_view' : 'map_view'),
-            onPressed: () => setState(() => _showMap = !_showMap),
-            icon: Icon(_showMap ? Icons.view_list_rounded : Icons.map_outlined),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              children: [
-                _chip(context.tr('all_cars'), _category == null, () {
-                  setState(() {
-                    _category = null;
-                    _load();
-                  });
-                }),
-                for (final c in Pricing.categories)
-                  _chip(context.tr(c.nameKey), _category == c.id, () {
-                    setState(() {
-                      _category = c.id;
-                      _load();
-                    });
-                  }),
-                _chip(
-                  context.tr('automatic'),
-                  _automaticOnly,
-                  () => setState(() => _automaticOnly = !_automaticOnly),
-                ),
-                PopupMenuButton<_Sort>(
-                  initialValue: _sort,
-                  onSelected: (s) => setState(() => _sort = s),
-                  itemBuilder: (context) => [
-                    for (final s in _Sort.values)
-                      PopupMenuItem(
-                        value: s,
-                        child: Text(context.tr('sort_${s.name}')),
-                      ),
-                  ],
-                  child: Chip(
-                    avatar: const Icon(Icons.sort_rounded, size: 16),
-                    label: Text(context.tr('sort_${_sort.name}')),
-                    backgroundColor: AppColors.surface,
-                    side: const BorderSide(color: AppColors.border),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<Car>>(
-              future: _results,
-              builder: (context, snap) {
-                if (snap.hasError) {
-                  return Center(
-                    child: Text(context.trError(errorCode(snap.error!))),
-                  );
-                }
-                if (!snap.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final cars = _filtered(snap.data!);
-                return _showMap ? _mapView(cars) : _listView(cars);
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -208,9 +249,6 @@ class _SearchScreenState extends State<SearchScreen> {
       label: Text(label),
       selected: selected,
       showCheckmark: false,
-      selectedColor: AppColors.primary,
-      backgroundColor: AppColors.surface,
-      side: BorderSide(color: selected ? AppColors.primary : AppColors.border),
       onSelected: (_) => onTap(),
     ),
   );
@@ -231,7 +269,7 @@ class _SearchScreenState extends State<SearchScreen> {
         for (final c in cars)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: CarListingCard(
+            child: ChooseCarCard(
               car: c,
               distanceLabel: distanceLabel(place, c),
               onTap: () => _open(c),
@@ -311,7 +349,7 @@ class _SearchScreenState extends State<SearchScreen> {
               top: false,
               child: Material(
                 elevation: 8,
-                shadowColor: Colors.black26,
+                shadowColor: Colors.black,
                 borderRadius: BorderRadius.circular(18),
                 child: CarListingCard(
                   car: _selected!,

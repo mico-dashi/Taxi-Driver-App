@@ -9,7 +9,9 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
+import '../../widgets/car_art.dart';
 import '../../widgets/common.dart';
+import '../../widgets/design.dart';
 import '../../widgets/map_widgets.dart';
 import '../../widgets/rental_widgets.dart';
 import 'book_car_screen.dart';
@@ -59,254 +61,335 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       promoPercent: app.promoPercent,
     );
     final tooShort = days < car.minDays;
+    final width = MediaQuery.sizeOf(context).width;
+    final category = Pricing.byId(car.categoryId);
     return Scaffold(
-      appBar: AppBar(title: Text(car.title)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        children: [
-          Container(
-            height: 190,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFF1F3F6), Color(0xFFDDE2E9)],
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: RotatedBox(
-              quarterTurns: 1,
-              child: CarTopView(color: Color(car.colorValue), size: 230),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            car.make.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              letterSpacing: 1,
-              color: AppColors.inkFaint,
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${car.model} · ${car.year}',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Plate(car.plate),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Rating(car.rating, trips: car.trips),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _fact(
-                Icons.settings_rounded,
-                transmissionLabel(context, car.transmission),
-              ),
-              _fact(
-                Icons.local_gas_station_rounded,
-                fuelLabel(context, car.fuel),
-              ),
-              _fact(
-                Icons.person_outline_rounded,
-                context.tr('n_seats', {'n': '${car.seats}'}),
-              ),
-              _fact(
-                Icons.speed_rounded,
-                context.tr('km_per_day', {'n': '${car.kmPerDay}'}),
-              ),
-              _fact(
-                categoryIcon(car.categoryId),
-                context.tr(Pricing.byId(car.categoryId).nameKey),
-              ),
-            ],
-          ),
-          SectionLabel(context.tr('owner')),
-          CardBox(
-            child: Row(
-              children: [
-                Avatar(car.ownerName, size: 44),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      VerifiedName(car.ownerName),
-                      Rating(car.ownerRating),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (car.description.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(car.description, style: const TextStyle(height: 1.4)),
-          ],
-          SectionLabel(context.tr('pickup_location')),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: SizedBox(
-              height: 170,
-              child: AppMap(
-                controller: _map,
-                center: car.location.point,
-                zoom: 14.5,
-                interactive: false,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
                 children: [
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: car.location.point,
-                        width: 40,
-                        height: 60,
-                        child: CarTopView(
-                          color: Color(car.colorValue),
-                          size: 46,
-                        ),
+                  CircleIconButton(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  Expanded(
+                    child: Text(
+                      context.tr('details'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
+                    ),
+                  ),
+                  CircleIconButton(
+                    icon: Icons.near_me_outlined,
+                    tooltip: context.tr('directions'),
+                    onTap: _directions,
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  [
-                    car.location.name,
-                    car.location.subtitle,
-                  ].where((s) => s.isNotEmpty).join(', '),
-                  style: const TextStyle(color: AppColors.inkSoft),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _directions,
-                icon: const Icon(Icons.directions_rounded, size: 18),
-                label: Text(context.tr('directions')),
-              ),
-            ],
-          ),
-          if (car.delivery)
-            Text(
-              car.deliveryFee == 0
-                  ? context.tr('delivery_free_desc')
-                  : context.tr('delivery_desc', {'p': money(car.deliveryFee)}),
-              style: const TextStyle(color: AppColors.inkSoft),
-            ),
-          SectionLabel(context.tr('rental_terms')),
-          CardBox(
-            child: Column(
-              children: [
-                _term(
-                  Icons.account_balance_wallet_outlined,
-                  context.tr('deposit'),
-                  money(car.deposit),
-                ),
-                _term(
-                  Icons.event_available_rounded,
-                  context.tr('min_rental'),
-                  context.tr('n_days', {'n': '${car.minDays}'}),
-                ),
-                _term(
-                  Icons.speed_rounded,
-                  context.tr('mileage'),
-                  context.tr('km_per_day', {'n': '${car.kmPerDay}'}),
-                ),
-                _term(
-                  Icons.local_gas_station_outlined,
-                  context.tr('fuel_policy'),
-                  context.tr('fuel_policy_value'),
-                ),
-                _term(
-                  Icons.badge_outlined,
-                  context.tr('requirements'),
-                  context.tr('requirements_value'),
-                ),
-              ],
-            ),
-          ),
-          SectionLabel(context.tr('your_dates')),
-          DatesField(start: app.searchStart, end: app.searchEnd, onTap: _dates),
-          const SizedBox(height: 12),
-          if (tooShort)
-            Pill(
-              context.tr('min_days_note', {'n': '${car.minDays}'}),
-              color: AppColors.dangerSoft,
-              textColor: AppColors.danger,
-            )
-          else
-            PriceBreakdown(quote: quote),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            border: Border(top: BorderSide(color: AppColors.border)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: money(car.pricePerDay),
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                children: [
+                  _hero(width),
+                  CardBox(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            MakeBadge(car, size: 46),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${car.model} · ${car.year}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${car.make} · ${money(car.pricePerDay)}${context.tr('per_day_short')}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.inkSoft,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            FavoriteButton(
+                              carId: car.id,
+                              size: 44,
+                              color: AppColors.surfaceHigh,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SpecTile(
+                                compact: true,
+                                icon: Icons.directions_car_outlined,
+                                title: transmissionLabel(
+                                  context,
+                                  car.transmission,
+                                ),
+                                caption: context.tr('gearbox'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SpecTile(
+                                compact: true,
+                                icon: Icons.airline_seat_recline_normal_rounded,
+                                title: '${car.seats}',
+                                caption: context.tr('seats'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Rating(car.rating, trips: car.trips),
+                            ),
+                            Plate(car.plate),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.55,
+                    children: [
+                      SpecTile(
+                        icon: Icons.local_gas_station_outlined,
+                        title: fuelLabel(context, car.fuel),
+                        caption: context.tr('fuel'),
+                        glow: true,
+                      ),
+                      SpecTile(
+                        icon: Icons.speed_rounded,
+                        title: context.tr('km_per_day', {
+                          'n': '${car.kmPerDay}',
+                        }),
+                        caption: context.tr('mileage'),
+                      ),
+                      SpecTile(
+                        icon: Icons.account_balance_wallet_outlined,
+                        title: money(car.deposit),
+                        caption: context.tr('deposit'),
+                      ),
+                      SpecTile(
+                        icon: Icons.event_available_rounded,
+                        title: context.tr('n_days', {'n': '${car.minDays}'}),
+                        caption: context.tr('min_rental'),
+                        glow: true,
+                      ),
+                      SpecTile(
+                        icon: categoryIcon(car.categoryId),
+                        title: context.tr(category.nameKey),
+                        caption: context.tr('car_type'),
+                        glow: true,
+                      ),
+                      SpecTile(
+                        icon: Icons.calendar_today_outlined,
+                        title: '${car.year}',
+                        caption: context.tr('year'),
+                      ),
+                    ],
+                  ),
+                  SectionLabel(context.tr('owner')),
+                  CardBox(
+                    child: Row(
+                      children: [
+                        Avatar(car.ownerName, size: 44),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              VerifiedName(car.ownerName),
+                              Rating(car.ownerRating),
+                            ],
                           ),
-                          TextSpan(
-                            text: context.tr('per_day_short'),
-                            style: const TextStyle(color: AppColors.inkSoft),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (car.description.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      car.description,
+                      style: const TextStyle(
+                        height: 1.5,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ],
+                  SectionLabel(context.tr('pickup_location')),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: SizedBox(
+                      height: 170,
+                      child: AppMap(
+                        controller: _map,
+                        center: car.location.point,
+                        zoom: 14.5,
+                        interactive: false,
+                        children: [
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: car.location.point,
+                                width: 40,
+                                height: 60,
+                                child: CarTopView(
+                                  color: Color(car.colorValue),
+                                  size: 46,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          [
+                            car.location.name,
+                            car.location.subtitle,
+                          ].where((s) => s.isNotEmpty).join(', '),
+                          style: const TextStyle(color: AppColors.inkSoft),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _directions,
+                        icon: const Icon(Icons.directions_rounded, size: 18),
+                        label: Text(context.tr('directions')),
+                      ),
+                    ],
+                  ),
+                  if (car.delivery)
+                    Text(
+                      car.deliveryFee == 0
+                          ? context.tr('delivery_free_desc')
+                          : context.tr('delivery_desc', {
+                              'p': money(car.deliveryFee),
+                            }),
+                      style: const TextStyle(color: AppColors.inkSoft),
+                    ),
+                  SectionLabel(context.tr('rental_terms')),
+                  CardBox(
+                    child: Column(
+                      children: [
+                        _term(
+                          Icons.local_gas_station_outlined,
+                          context.tr('fuel_policy'),
+                          context.tr('fuel_policy_value'),
+                        ),
+                        _term(
+                          Icons.badge_outlined,
+                          context.tr('requirements'),
+                          context.tr('requirements_value'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SectionLabel(context.tr('your_dates')),
+                  DatesField(
+                    start: app.searchStart,
+                    end: app.searchEnd,
+                    onTap: _dates,
+                  ),
+                  const SizedBox(height: 12),
+                  if (tooShort)
+                    Pill(
+                      context.tr('min_days_note', {'n': '${car.minDays}'}),
+                      color: AppColors.dangerSoft,
+                      textColor: AppColors.danger,
+                    )
+                  else
+                    PriceBreakdown(quote: quote),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            border: Border(top: BorderSide(color: AppColors.surface)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 0, 6, 10),
+                child: Row(
+                  children: [
+                    PerDayPrice(car.pricePerDay),
+                    const SizedBox(width: 12),
                     if (!tooShort)
-                      Text(
-                        '${money(quote.total)} ${context.tr('in_total')}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.inkSoft,
+                      Expanded(
+                        child: Text(
+                          '${money(quote.total)} ${context.tr('in_total')}',
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.inkSoft,
+                          ),
                         ),
                       ),
                   ],
                 ),
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(150, 52),
-                ),
-                onPressed: tooShort
+              SlideAction(
+                label: context.tr(tooShort ? 'change_dates' : 'slide_to_book'),
+                icon: tooShort
+                    ? Icons.calendar_month_rounded
+                    : Icons.check_rounded,
+                onSubmit: tooShort
                     ? _dates
                     : () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => BookCarScreen(car: car),
                         ),
                       ),
-                child: Text(context.tr(tooShort ? 'change_dates' : 'book_now')),
               ),
             ],
           ),
@@ -315,25 +398,38 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
   }
 
-  Widget _fact(IconData icon, String text) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.border),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        ),
-      ],
-    ),
-  );
+  Widget _hero(double width) {
+    final carW = (width - 24).clamp(260.0, 440.0);
+    return SizedBox(
+      height: carW * 0.4 * 1.32 + 36,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, 0.1),
+                  radius: 0.75,
+                  colors: [
+                    const Color(0xFF2A2C30),
+                    AppColors.background.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 24,
+            child: Hero(
+              tag: 'car-${car.id}',
+              child: CarShowcase(car: car, width: carW),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _term(IconData icon, String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),

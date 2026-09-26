@@ -34,6 +34,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('EN'));
     await tester.pumpAndSettle();
+    // Welcome screen: slide (or tap) "Get Started".
+    expect(find.text('Find the\nnearest car'), findsOneWidget);
+    await tester.tap(find.text('Get Started'));
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), '069 123 4567');
     await tester.tap(find.text('Continue'));
@@ -49,26 +53,41 @@ void main() {
     await tester.pumpAndSettle();
 
     // Home: search card, promo, cars nearby.
-    expect(find.text('Search cars'), findsOneWidget);
+    expect(find.text('Hello, Alda'), findsOneWidget);
+    expect(find.byTooltip('Search cars'), findsOneWidget);
     expect(find.textContaining('20% off'), findsOneWidget);
-    expect(find.text('Pick-up'), findsWidgets);
-    expect(find.textContaining('/day'), findsWidgets);
+    expect(find.textContaining('Pick-up'), findsWidgets);
+    expect(find.text('Top trends'), findsOneWidget);
+    expect(find.textContaining('per day'), findsWidgets);
 
-    await tester.tap(find.text('Search cars'));
+    // Hearts are remembered as favourites.
+    await tester.tap(find.byTooltip('Add to favourites').first);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Remove from favourites'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Search cars'));
     await tester.pumpAndSettle();
     expect(find.textContaining('cars available'), findsOneWidget);
     expect(find.text('Golf 7 · 2018'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Golf 7 · 2018'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Golf 7 · 2018'));
     await tester.pumpAndSettle();
-    expect(find.text('Arben Hoxha'), findsOneWidget);
+    expect(find.text('Details'), findsOneWidget);
+    expect(find.text('Gearbox'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('RENTAL TERMS'),
+      find.text('Arben Hoxha'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Rental terms'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Return at the same level'), findsOneWidget);
-    await tester.tap(find.text('Book'));
+    await tester.tap(find.text('Book now'));
     await tester.pumpAndSettle();
 
     // Dates -> Payment -> Offer.
@@ -120,6 +139,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('EN'));
     await tester.pumpAndSettle();
+    // Welcome screen: slide (or tap) "Get Started".
+    expect(find.text('Find the\nnearest car'), findsOneWidget);
+    await tester.tap(find.text('Get Started'));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '068 555 1234');
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
@@ -167,13 +190,18 @@ void main() {
     expect(find.text('Volkswagen Golf 7 · 2018'), findsOneWidget);
 
     // Back to the requests inbox; a simulated renter sends a request.
-    await tester.tap(find.text('Requests'));
+    await tester.tap(find.byTooltip('Requests'));
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
-    expect(find.text('NEW REQUESTS'), findsOneWidget);
+    expect(find.text('New requests'), findsOneWidget);
     await tester.tap(find.widgetWithText(ElevatedButton, 'Accept').first);
     await tester.pumpAndSettle();
-    expect(find.text('UPCOMING HANDOVERS'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Upcoming handovers'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Upcoming handovers'), findsOneWidget);
 
     backend.dispose();
     await tester.pumpWidget(const SizedBox());

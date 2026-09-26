@@ -139,7 +139,7 @@ class _ChatsTabState extends State<ChatsTab> {
                   backgroundColor: AppColors.primarySoft,
                   child: Icon(
                     Icons.support_agent_rounded,
-                    color: AppColors.ink,
+                    color: AppColors.primaryLight,
                   ),
                 ),
                 const SizedBox(width: 12),

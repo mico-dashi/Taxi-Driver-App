@@ -83,9 +83,18 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           children: [
-            const Align(
-              alignment: Alignment.centerRight,
-              child: LanguageToggle(),
+            Row(
+              children: [
+                if (Navigator.of(context).canPop())
+                  CircleIconButton(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                const Spacer(),
+                const LanguageToggle(),
+              ],
             ),
             const SizedBox(height: 32),
             const Align(
@@ -95,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 28),
             Text(
               context.tr('login_title'),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
@@ -157,7 +166,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: AppColors.primarySoft,
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded),
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: AppColors.primaryLight,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -244,14 +256,22 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: CircleIconButton(
+                icon: Icons.chevron_left_rounded,
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+            const SizedBox(height: 28),
             Text(
               context.tr('otp_title'),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(

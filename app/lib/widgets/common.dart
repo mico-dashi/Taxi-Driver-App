@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
-import 'map_widgets.dart';
+import 'car_art.dart';
 
 /// Initials avatar (no photos needed; works offline).
 class Avatar extends StatelessWidget {
@@ -13,12 +13,12 @@ class Avatar extends StatelessWidget {
   final double size;
 
   static const _palette = [
-    Color(0xFFFFE3A3),
-    Color(0xFFCDE7FF),
-    Color(0xFFD8F3DC),
-    Color(0xFFFFD6D6),
-    Color(0xFFE9D8FD),
-    Color(0xFFFFE0C2),
+    Color(0xFF7A1119),
+    Color(0xFF24466E),
+    Color(0xFF2B5A45),
+    Color(0xFF6B4F1D),
+    Color(0xFF4B3470),
+    Color(0xFF3C474F),
   ];
 
   @override
@@ -36,7 +36,15 @@ class Avatar extends StatelessWidget {
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.lerp(color, Colors.white, 0.18)!, color],
+        ),
+        border: Border.all(color: AppColors.border, width: 1.5),
+      ),
       child: Text(
         initials,
         style: TextStyle(
@@ -56,15 +64,22 @@ IconData categoryIcon(String categoryId) => switch (categoryId) {
   _ => Icons.directions_car_filled_rounded,
 };
 
-/// The car's "photo": a drawing of the car in its own colour, lying on a
-/// soft tile. Owners can add real photos later (see docs/GOING_LIVE.md).
+/// The car's "photo": a side-view drawing of the car in its own colour on
+/// a dark tile. Owners can add real photos later (see docs/GOING_LIVE.md).
 class CarBadge extends StatelessWidget {
-  const CarBadge({super.key, required this.color, this.size = 56});
+  const CarBadge({
+    super.key,
+    required this.color,
+    this.shape = CarShape.hatch,
+    this.size = 56,
+  });
 
   CarBadge.of(Car car, {super.key, this.size = 56})
-    : color = Color(car.colorValue);
+    : color = Color(car.colorValue),
+      shape = shapeFor(car);
 
   final Color color;
+  final CarShape shape;
   final double size;
 
   @override
@@ -73,18 +88,15 @@ class CarBadge extends StatelessWidget {
       width: size * 1.5,
       height: size,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF1F3F6), Color(0xFFE2E6EC)],
+        gradient: const RadialGradient(
+          center: Alignment(0, 0.3),
+          radius: 0.9,
+          colors: [Color(0xFF3A3D41), AppColors.surfaceHigh],
         ),
-        borderRadius: BorderRadius.circular(size * 0.22),
+        borderRadius: BorderRadius.circular(size * 0.26),
       ),
       alignment: Alignment.center,
-      child: RotatedBox(
-        quarterTurns: 1,
-        child: CarTopView(color: color, size: size * 1.12),
-      ),
+      child: CarSideView(color: color, shape: shape, width: size * 1.36),
     );
   }
 }
@@ -100,20 +112,16 @@ class Rating extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
+        const Icon(Icons.star_rounded, size: 14, color: AppColors.star),
         const SizedBox(width: 2),
         Text(
           value.toStringAsFixed(1),
           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
         ),
         if (trips != null) ...[
-          const Text(
-            ' · ',
-            style: TextStyle(fontSize: 12, color: AppColors.inkFaint),
-          ),
           Flexible(
             child: Text(
-              context.tr('n_trips', {'n': '$trips'}),
+              ' · ${context.tr('n_trips', {'n': '$trips'})}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
@@ -169,7 +177,7 @@ class Plate extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.border),
       ),
@@ -262,18 +270,18 @@ class CardBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color ?? AppColors.surface,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           padding: padding,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: selected ? AppColors.ink : AppColors.border,
-              width: selected ? 1.6 : 1,
+              color: selected ? AppColors.primary : Colors.transparent,
+              width: 1.6,
             ),
           ),
           child: child,
@@ -292,17 +300,16 @@ class SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
+      padding: const EdgeInsets.fromLTRB(2, 24, 2, 12),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              text.toUpperCase(),
+              text,
               style: const TextStyle(
-                fontSize: 12,
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w600,
-                color: AppColors.inkFaint,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
               ),
             ),
           ),
@@ -422,7 +429,7 @@ class RouteSummary extends StatelessWidget {
     height: 12,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      color: Colors.white,
+      color: AppColors.surface,
       border: Border.all(color: c, width: 3.5),
     ),
   );
@@ -453,10 +460,7 @@ class StepHeader extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: const [
-                BoxShadow(color: Color(0x14000000), blurRadius: 12),
-              ],
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
@@ -507,59 +511,61 @@ class _StepDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: active
             ? AppColors.primary
-            : (done ? AppColors.primarySoft : AppColors.background),
+            : (done ? AppColors.primarySoft : AppColors.surfaceHigh),
       ),
       child: done
           ? const Icon(
               Icons.check_rounded,
               size: 12,
-              color: AppColors.primaryDark,
+              color: AppColors.primaryLight,
             )
           : Text(
               '${index + 1}',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: active ? AppColors.ink : AppColors.inkFaint,
+                color: active ? Colors.white : AppColors.inkFaint,
               ),
             ),
     );
   }
 }
 
+/// Round dark button used in the top bars (back, search, favourite).
 class CircleIconButton extends StatelessWidget {
   const CircleIconButton({
     super.key,
     required this.icon,
     required this.onTap,
-    this.size = 44,
+    this.size = 48,
+    this.color = AppColors.surface,
+    this.iconColor = AppColors.ink,
+    this.tooltip,
   });
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final double size;
+  final Color color;
+  final Color iconColor;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
+    final button = Material(
+      color: color,
       shape: const CircleBorder(),
-      elevation: 0,
-      shadowColor: Colors.black26,
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: Container(
+        child: SizedBox(
           width: size,
           height: size,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 12)],
-          ),
-          child: Icon(icon, color: AppColors.ink),
+          child: Icon(icon, color: iconColor, size: size * 0.46),
         ),
       ),
     );
+    return tooltip == null ? button : Tooltip(message: tooltip, child: button);
   }
 }
 
@@ -584,7 +590,6 @@ class StatusPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 12)],
       ),
       child: Row(
         children: [
@@ -622,7 +627,7 @@ class PaymentIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final (IconData icon, Color color) = switch (method.type) {
       PaymentType.cash => (Icons.payments_rounded, AppColors.success),
-      PaymentType.card => (Icons.credit_card_rounded, const Color(0xFF1A1F71)),
+      PaymentType.card => (Icons.credit_card_rounded, AppColors.info),
       PaymentType.applePay => (Icons.apple_rounded, AppColors.ink),
       PaymentType.googlePay => (
         Icons.g_mobiledata_rounded,
@@ -633,7 +638,7 @@ class PaymentIcon extends StatelessWidget {
       width: 44,
       height: 32,
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(icon, color: color, size: 22),

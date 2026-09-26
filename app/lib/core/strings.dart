@@ -366,6 +366,29 @@ class Strings {
     'err_counter_too_low':
         'Kundëroferta duhet të jetë më e lartë se oferta e qiramarrësit',
     'err_request_expired': 'Kërkesa ka skaduar',
+
+    // Design (welcome, home, details)
+    'welcome_title': 'Gjej makinën\nmë të afërt',
+    'welcome_subtitle': 'Makina me qira nga njerëz të besuar në gjithë Shqipërinë, me dorëzim deri te dera.',
+    'welcome_cta': 'Fillo',
+    'hello_name': 'Përshëndetje, {name}',
+    'home_tagline': 'Nis aventurën tënde të radhës',
+    'top_trends': 'Më të kërkuarat',
+    'see_all': 'Shiko të gjitha',
+    'choose_car': 'Zgjidh një makinë',
+    'filters': 'Filtrat',
+    'details': 'Detajet',
+    'favorites': 'Të preferuarat',
+    'add_favorite': 'Shto te të preferuarat',
+    'remove_favorite': 'Hiq nga të preferuarat',
+    'no_favorites':
+        'Ende s\'keni makina të preferuara. Shtypni ♡ te një makinë.',
+    'gearbox': 'Kutia',
+    'fuel': 'Karburanti',
+    'per_day_long': 'në ditë',
+    'open_car': 'Hap makinën',
+    'slide_to_book': 'Rezervo tani',
+    'where_when': 'Ku dhe kur?',
   };
 
   static const en = <String, String>{
@@ -737,5 +760,27 @@ class Strings {
     'err_counter_too_low':
         'The counter-offer must be higher than the renter\'s offer',
     'err_request_expired': 'The request has expired',
+
+    // Design (welcome, home, details)
+    'welcome_title': 'Find the\nnearest car',
+    'welcome_subtitle': 'Cars for rent from trusted people all over Albania, delivered to your door.',
+    'welcome_cta': 'Get Started',
+    'hello_name': 'Hello, {name}',
+    'home_tagline': 'Start your next adventure',
+    'top_trends': 'Top trends',
+    'see_all': 'See all',
+    'choose_car': 'Choose a car',
+    'filters': 'Filters',
+    'details': 'Details',
+    'favorites': 'Favourites',
+    'add_favorite': 'Add to favourites',
+    'remove_favorite': 'Remove from favourites',
+    'no_favorites': 'No favourite cars yet. Tap ♡ on a car to save it.',
+    'gearbox': 'Gearbox',
+    'fuel': 'Fuel',
+    'per_day_long': 'per day',
+    'open_car': 'Open car',
+    'slide_to_book': 'Book now',
+    'where_when': 'Where and when?',
   };
 }

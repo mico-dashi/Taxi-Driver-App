@@ -11,6 +11,16 @@ It comes with a **backend** (database, security rules, realtime updates) that ma
 
 > The app started as a taxi app (inDrive-style offers). That version is kept in the Git history at commit `30c064e`.
 
+## Design
+
+A dark, premium look in three colours: **racing red `#EC0618`**, **graphite `#212325`** and **near-black `#010101`**, with the Manrope font.
+- **Welcome screen**: a red sports car on a dark stage in front of a giant "AL", and a **slide-to-start** button.
+- **Home**: "Hello, …" greeting, a where/when search card, the QIRA20 promo, a **Top trends** carousel with hearts (favourites are saved), and a **Choose a car** list with big car cards, category chips and a red arrow button.
+- **Car details**: the car large with a reflection, brand badge, gearbox and seats tiles, a grid for fuel, km per day, deposit, minimum days, type and year, then owner, location map, terms, price, and a **slide to "Book now"** button.
+- **Floating pill menu** at the bottom, the active tab in a red circle. Maps switch to a night style.
+- Every car is **drawn in code in its own colour** as a side view (hatchback, sedan, sport, SUV or van, picked from the category and model), so listings look good before owners upload photos. The owner's "Add car" form shows a live preview.
+- New app icon: a white sports car on red, generated for Android, iPhone and web.
+
 ---
 
 ## How it works
@@ -48,20 +58,22 @@ See **[docs/GOING_LIVE.md](docs/GOING_LIVE.md)**: backend setup, SMS login, appr
 
 ## Re-branding
 
-`app/lib/core/config.dart` holds the name, tagline, support contacts, promo code, search radius and map server; `app/lib/core/theme.dart` the colours; `app/lib/core/strings.dart` all texts in Albanian and English. Replace the launcher icons in `app/android/app/src/main/res/mipmap-*` and `app/ios/Runner/Assets.xcassets`.
+`app/lib/core/config.dart` holds the name, tagline, support contacts, promo code, search radius and map server; `app/lib/core/theme.dart` the colours (`AppColors`) and the font (Manrope, SIL Open Font License, in `app/assets/fonts`); `app/lib/core/strings.dart` all texts in Albanian and English. Replace the launcher icons in `app/android/app/src/main/res/mipmap-*` and `app/ios/Runner/Assets.xcassets`.
 
 ## Project structure
 
 ```
 app/                         Flutter app (Android, iOS, web)
+  assets/fonts/              Manrope font (OFL licence)
   lib/core/                  config, theme, translations, Albanian places, formatting
   lib/models/                cars, bookings, users
   lib/services/              backend interface, demo simulator, Supabase backend,
                              pricing, address search, GPS
-  lib/screens/auth/          login, SMS code, choose mode
+  lib/screens/auth/          welcome, login, SMS code, choose mode
   lib/screens/renter/        home & search, results (list/map), car page, booking steps, my rentals
   lib/screens/owner/         requests inbox, my cars, add/edit car, earnings, account
   lib/screens/common/        booking status page (both sides), chats, payment, places, profile
+  lib/widgets/               design kit: car drawings, slide button, pill menu, cards
   test/                      unit, simulated booking flows and UI tests
 supabase/
   migrations/                schema, security rules and booking functions
@@ -73,6 +85,6 @@ docs/GOING_LIVE.md           launch guide for Albania
 ## Tests
 
 ```bash
-cd app && flutter analyze && flutter test          # 20 tests
+cd app && flutter analyze && flutter test          # 21 tests
 PGHOST=... PGUSER=... ./supabase/tests/run_local.sh # rental flow on PostgreSQL
 ```

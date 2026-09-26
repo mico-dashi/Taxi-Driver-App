@@ -228,8 +228,7 @@ class _RequestCard extends StatelessWidget {
     final below = b.offeredPerDay < b.car.pricePerDay;
     return Material(
       color: AppColors.surface,
-      elevation: 3,
-      shadowColor: Colors.black12,
+      elevation: 0,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onOpen,
@@ -272,7 +271,7 @@ class _RequestCard extends StatelessWidget {
                           }),
                           style: const TextStyle(
                             fontSize: 11,
-                            color: AppColors.primaryDark,
+                            color: AppColors.primaryLight,
                           ),
                         ),
                     ],
@@ -311,13 +310,13 @@ class _RequestCard extends StatelessWidget {
                 children: [
                   Pill(
                     '${context.tr('total')}: ${money(Pricing.quoteFor(b).total)}',
-                    color: AppColors.background,
+                    color: AppColors.surfaceHigh,
                     textColor: AppColors.ink,
                     dot: false,
                   ),
                   Pill(
                     paymentTypeLabel(context, b.payment),
-                    color: AppColors.background,
+                    color: AppColors.surfaceHigh,
                     textColor: AppColors.inkSoft,
                     dot: false,
                   ),
@@ -325,7 +324,7 @@ class _RequestCard extends StatelessWidget {
                     Pill(
                       context.tr('delivery'),
                       color: AppColors.primarySoft,
-                      textColor: AppColors.primaryDark,
+                      textColor: AppColors.primaryLight,
                       dot: false,
                     ),
                 ],

@@ -9,6 +9,7 @@ import 'package:taksi_al/models/models.dart';
 import 'package:taksi_al/screens/common/payment_widgets.dart';
 import 'package:taksi_al/screens/owner/car_form_screen.dart';
 import 'package:taksi_al/services/pricing.dart';
+import 'package:taksi_al/widgets/car_art.dart';
 
 void main() {
   group('Rental pricing', () {
@@ -148,5 +149,22 @@ void main() {
         ..sort();
       expect(missing, isEmpty, reason: 'Missing translations: $missing');
     });
+  });
+
+  test('car drawings pick a body style from the listing', () {
+    CarShape shape(String cat, String make, String model, [int seats = 5]) =>
+        shapeForListing(
+          categoryId: cat,
+          make: make,
+          model: model,
+          seats: seats,
+        );
+    expect(shape('economy', 'Volkswagen', 'Golf 7'), CarShape.hatch);
+    expect(shape('economy', 'Skoda', 'Octavia'), CarShape.sedan);
+    expect(shape('suv', 'Hyundai', 'Tucson'), CarShape.suv);
+    expect(shape('luxury', 'BMW', 'X5'), CarShape.suv);
+    expect(shape('luxury', 'Mercedes-Benz', 'E 220d'), CarShape.sedan);
+    expect(shape('luxury', 'Porsche', '911'), CarShape.sport);
+    expect(shape('van', 'Mercedes-Benz', 'Vito', 8), CarShape.van);
   });
 }

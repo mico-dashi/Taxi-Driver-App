@@ -35,6 +35,17 @@ class AppState extends ChangeNotifier {
   Place? workPlace;
   int promoPercent = 0;
   String? promoCode;
+  Set<String> favorites = {};
+
+  bool isFavorite(String carId) => favorites.contains(carId);
+
+  Future<void> toggleFavorite(String carId) async {
+    favorites = {...favorites};
+    if (!favorites.remove(carId)) favorites.add(carId);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kFavorites, favorites.toList());
+  }
 
   PaymentMethod get selectedPayment => paymentMethods.firstWhere(
     (m) => m.id == selectedPaymentId,
@@ -73,10 +84,12 @@ class AppState extends ChangeNotifier {
   static const _kHome = 'place_home';
   static const _kWork = 'place_work';
   static const _kPromo = 'promo_code';
+  static const _kFavorites = 'favorites';
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     lang = prefs.getString(_kLang) ?? 'sq';
+    favorites = (prefs.getStringList(_kFavorites) ?? const []).toSet();
     recents = _decodePlaces(prefs.getString(_kRecents));
     final pm = prefs.getString(_kPayments);
     if (pm != null) {

@@ -210,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   IconButton.filled(
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.ink,
+                      foregroundColor: Colors.white,
                       minimumSize: const Size(50, 50),
                     ),
                     onPressed: _send,

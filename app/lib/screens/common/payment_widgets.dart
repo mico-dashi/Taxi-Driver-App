@@ -140,7 +140,7 @@ class _MethodTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_off_rounded,
-              color: selected ? AppColors.primaryDark : AppColors.border,
+              color: selected ? AppColors.primaryLight : AppColors.border,
             ),
           ],
         ),

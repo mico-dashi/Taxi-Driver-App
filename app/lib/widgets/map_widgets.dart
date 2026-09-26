@@ -37,7 +37,7 @@ class AppMap extends StatelessWidget {
         minZoom: 6,
         maxZoom: 19,
         onMapReady: onReady,
-        backgroundColor: const Color(0xFFEFEDE8),
+        backgroundColor: const Color(0xFF1B1C1E),
         interactionOptions: InteractionOptions(
           flags: interactive
               ? InteractiveFlag.all & ~InteractiveFlag.rotate
@@ -49,6 +49,8 @@ class AppMap extends StatelessWidget {
           urlTemplate: AppConfig.tileUrl,
           userAgentPackageName: AppConfig.userAgentPackage,
           maxZoom: 19,
+          // Night-mode map to match the dark app.
+          tileBuilder: darkModeTileBuilder,
         ),
         ...children,
         // Credit required by the OpenStreetMap licence.
@@ -58,7 +60,7 @@ class AppMap extends StatelessWidget {
             child: Container(
               margin: const EdgeInsets.all(4),
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              color: const Color(0xB3FFFFFF),
+              color: const Color(0xB3000000),
               child: const Text(
                 '© OpenStreetMap',
                 style: TextStyle(fontSize: 9, color: AppColors.inkSoft),
@@ -94,16 +96,14 @@ void fitPoints(
   );
 }
 
-Polyline routeLine(
-  List<LatLng> points, {
-  Color color = AppColors.primaryDark,
-}) => Polyline(
-  points: points,
-  strokeWidth: 5,
-  color: color,
-  borderStrokeWidth: 2,
-  borderColor: Colors.white,
-);
+Polyline routeLine(List<LatLng> points, {Color color = AppColors.primary}) =>
+    Polyline(
+      points: points,
+      strokeWidth: 5,
+      color: color,
+      borderStrokeWidth: 2,
+      borderColor: AppColors.background,
+    );
 
 Marker pinMarker(LatLng p, {required bool pickup, String? label}) => Marker(
   point: p,
@@ -135,7 +135,7 @@ Marker pinMarker(LatLng p, {required bool pickup, String? label}) => Marker(
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.background,
           shape: BoxShape.circle,
           border: Border.all(
             color: pickup ? AppColors.pickup : AppColors.destination,
@@ -167,10 +167,10 @@ Marker priceMarker(
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? AppColors.ink : AppColors.surface,
+            color: selected ? AppColors.primary : AppColors.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? AppColors.ink : AppColors.border,
+              color: selected ? AppColors.primary : AppColors.border,
             ),
             boxShadow: const [
               BoxShadow(
@@ -198,7 +198,7 @@ Marker priceMarker(
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: selected ? AppColors.primary : AppColors.ink,
+                  color: AppColors.ink,
                 ),
               ),
             ],
@@ -207,7 +207,7 @@ Marker priceMarker(
         CustomPaint(
           size: const Size(10, 6),
           painter: _PinTailPainter(
-            selected ? AppColors.ink : AppColors.surface,
+            selected ? AppColors.primary : AppColors.surface,
           ),
         ),
       ],

@@ -8,6 +8,7 @@ import '../../models/models.dart';
 import '../../services/pricing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/common.dart';
+import '../../widgets/design.dart';
 import '../common/chats_tab.dart';
 import '../common/profile_widgets.dart';
 import 'my_cars_tab.dart';
@@ -40,37 +41,34 @@ class _OwnerShellState extends State<OwnerShell> {
           const OwnerAccountTab(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primarySoft,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.inbox_outlined),
-            selectedIcon: const Icon(Icons.inbox_rounded),
-            label: context.tr('tab_requests'),
+      bottomNavigationBar: PillNavBar(
+        index: _tab,
+        onTap: (i) => setState(() => _tab = i),
+        items: [
+          NavItem(
+            Icons.inbox_outlined,
+            Icons.inbox_rounded,
+            context.tr('tab_requests'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.directions_car_outlined),
-            selectedIcon: const Icon(Icons.directions_car_rounded),
-            label: context.tr('tab_my_cars'),
+          NavItem(
+            Icons.directions_car_outlined,
+            Icons.directions_car_rounded,
+            context.tr('tab_my_cars'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: const Icon(Icons.chat_bubble_rounded),
-            label: context.tr('tab_chat'),
+          NavItem(
+            Icons.chat_bubble_outline_rounded,
+            Icons.chat_bubble_rounded,
+            context.tr('tab_chat'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: const Icon(Icons.account_balance_wallet_rounded),
-            label: context.tr('tab_earnings'),
+          NavItem(
+            Icons.account_balance_wallet_outlined,
+            Icons.account_balance_wallet_rounded,
+            context.tr('tab_earnings'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline_rounded),
-            selectedIcon: const Icon(Icons.person_rounded),
-            label: context.tr('tab_account'),
+          NavItem(
+            Icons.person_outline_rounded,
+            Icons.person_rounded,
+            context.tr('tab_account'),
           ),
         ],
       ),
@@ -127,8 +125,18 @@ class _EarningsTabState extends State<EarningsTab> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.ink,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(26),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF8E0310), AppColors.primary],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 24,
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +149,7 @@ class _EarningsTabState extends State<EarningsTab> {
                         Text(
                           money(e.thisMonth),
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: Colors.white,
                             fontSize: 34,
                             fontWeight: FontWeight.w800,
                           ),

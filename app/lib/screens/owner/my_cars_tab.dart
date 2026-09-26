@@ -44,7 +44,8 @@ class _MyCarsTabState extends State<MyCarsTab> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _edit,
         backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.ink,
+        foregroundColor: Colors.white,
+        shape: const StadiumBorder(),
         icon: const Icon(Icons.add_rounded),
         label: Text(context.tr('add_car')),
       ),

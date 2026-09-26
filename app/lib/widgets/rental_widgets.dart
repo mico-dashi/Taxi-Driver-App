@@ -5,7 +5,9 @@ import '../core/l10n.dart';
 import '../core/theme.dart';
 import '../models/models.dart';
 import '../services/pricing.dart';
+import 'car_art.dart';
 import 'common.dart';
+import 'design.dart';
 
 /// Lets the user choose pickup and return days, then the pickup hour.
 /// Returns (start, end) or null when cancelled.
@@ -28,9 +30,10 @@ Future<(DateTime, DateTime)?> pickRentalDates(
     builder: (context, child) => Theme(
       data: Theme.of(context).copyWith(
         colorScheme: Theme.of(context).colorScheme.copyWith(
-          primary: AppColors.ink,
+          primary: AppColors.primary,
           onPrimary: Colors.white,
           secondaryContainer: AppColors.primarySoft,
+          surface: AppColors.background,
         ),
       ),
       child: child!,
@@ -278,7 +281,7 @@ class CarListingCard extends StatelessWidget {
                   ? context.tr('free_delivery')
                   : context.tr('delivery_for', {'p': money(car.deliveryFee)}),
               color: AppColors.primarySoft,
-              textColor: AppColors.primaryDark,
+              textColor: AppColors.primaryLight,
               dot: false,
             ),
           ],
@@ -295,6 +298,347 @@ class CarListingCard extends StatelessWidget {
       Text(
         text,
         style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+      ),
+    ],
+  );
+}
+
+/// "Price /day" with the unit in a smaller grey font.
+class PerDayPrice extends StatelessWidget {
+  const PerDayPrice(this.amount, {super.key, this.fontSize = 20});
+
+  final int amount;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: money(amount),
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+            ),
+          ),
+          TextSpan(
+            text: context.tr('per_day_short'),
+            style: TextStyle(
+              fontSize: fontSize * 0.55,
+              color: AppColors.inkSoft,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Wide dark card for the "Top trends" carousel: the car on a tinted stage,
+/// a heart, name, place, rating and price.
+class TrendCard extends StatelessWidget {
+  const TrendCard({super.key, required this.car, required this.onTap});
+
+  final Car car;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = Color(car.colorValue);
+    return SizedBox(
+      width: 252,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(26),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(26),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(tint, const Color(0xFF2A2C2F), 0.72)!,
+                  const Color(0xFF151618),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 22,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: CarShowcase(car: car, width: 216, reflection: false),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: FavoriteButton(carId: car.id, size: 36),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 14,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              car.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.place_outlined,
+                                  size: 13,
+                                  color: AppColors.inkSoft,
+                                ),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    car.location.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.inkSoft,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Rating(car.rating, trips: car.trips),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            money(car.pricePerDay),
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            context.tr('per_day_long'),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.inkSoft,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Big "Choose a car" card: make and model on the left, rating and price on
+/// the right, the car filling the bottom and a red arrow button.
+class ChooseCarCard extends StatelessWidget {
+  const ChooseCarCard({
+    super.key,
+    required this.car,
+    required this.onTap,
+    this.distanceLabel,
+  });
+
+  final Car car;
+  final VoidCallback onTap;
+  final String? distanceLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Ink(
+          height: 196,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: const RadialGradient(
+              center: Alignment(0.55, 0.6),
+              radius: 1.1,
+              colors: [Color(0xFF34373B), AppColors.surface, Color(0xFF18191B)],
+              stops: [0, 0.5, 1],
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final carW = (box.maxWidth * 0.72).clamp(200.0, 300.0);
+              return Stack(
+                children: [
+                  Positioned(
+                    right: -carW * 0.06,
+                    bottom: 12,
+                    child: CarShowcase(
+                      car: car,
+                      width: carW,
+                      reflection: false,
+                    ),
+                  ),
+                  Positioned(
+                    left: 18,
+                    top: 16,
+                    right: 18,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                car.make,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '${car.model} · ${car.year}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.inkSoft,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 4,
+                                children: [
+                                  _spec(
+                                    Icons.settings_rounded,
+                                    transmissionLabel(
+                                      context,
+                                      car.transmission,
+                                    ),
+                                  ),
+                                  _spec(
+                                    Icons.local_gas_station_rounded,
+                                    fuelLabel(context, car.fuel),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 16,
+                                  color: AppColors.star,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  car.rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              money(car.pricePerDay),
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            Text(
+                              context.tr('per_day_long'),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.inkSoft,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: 16,
+                    bottom: 16,
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.45),
+                            blurRadius: 14,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _spec(IconData icon, String text) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 13, color: AppColors.inkFaint),
+      const SizedBox(width: 3),
+      Text(
+        text,
+        style: const TextStyle(fontSize: 12, color: AppColors.inkFaint),
       ),
     ],
   );
@@ -373,10 +717,10 @@ class PriceBreakdown extends StatelessWidget {
 
 (Color, Color) statusColors(BookingStatus s) => switch (s) {
   BookingStatus.requested ||
-  BookingStatus.countered => (AppColors.primarySoft, AppColors.primaryDark),
-  BookingStatus.confirmed => (const Color(0xFFE3ECFF), AppColors.verified),
+  BookingStatus.countered => (AppColors.primarySoft, AppColors.primaryLight),
+  BookingStatus.confirmed => (AppColors.infoSoft, AppColors.info),
   BookingStatus.active => (AppColors.successSoft, AppColors.success),
-  BookingStatus.completed => (AppColors.background, AppColors.inkSoft),
+  BookingStatus.completed => (AppColors.surfaceHigh, AppColors.inkSoft),
   _ => (AppColors.dangerSoft, AppColors.danger),
 };
 
