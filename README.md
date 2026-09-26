@@ -50,6 +50,8 @@ flutter run            # Android / iPhone, or: flutter run -d chrome
 
 ## Go live
 
+Everything runs on free services: Supabase, Netlify, Codemagic and Gmail. See **[docs/FREE_SETUP.md](docs/FREE_SETUP.md)**.
+
 The live backend is already set up (Supabase project `rent-al`). The remaining steps that need your accounts are listed at the top of the go-live guide.
 
 See **[docs/GOING_LIVE.md](docs/GOING_LIVE.md)**: backend setup, SMS login, approving cars, insurance and legal points for renting cars in Albania, payments, and publishing to the stores.

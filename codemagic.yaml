@@ -1,0 +1,36 @@
+# Free Android builds on Codemagic (500 free build minutes a month):
+# sign in at https://codemagic.io with GitHub, add this repository and
+# start the "Rent AL Android" workflow. It also runs on every push to main.
+workflows:
+  android:
+    name: Rent AL Android
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: 3.47.5
+      java: 17
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+    scripts:
+      - name: Tests
+        script: |
+          cd app
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: Live app (connected to Supabase)
+        script: |
+          cd app
+          flutter build apk --release --dart-define-from-file=config/live.json
+          cp build/app/outputs/flutter-apk/app-release.apk ../rent-al.apk
+      - name: Demo app (offline, for showing to owners)
+        script: |
+          cd app
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk ../rent-al-demo.apk
+    artifacts:
+      - rent-al.apk
+      - rent-al-demo.apk

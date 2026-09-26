@@ -4,6 +4,8 @@ The app works out of the box in **demo mode**. To take real bookings you need a 
 
 ## Status: the live backend is set up
 
+> **All on free services:** see [FREE_SETUP.md](FREE_SETUP.md). It covers Netlify for the website, Codemagic for the Android app, and Gmail for the login emails, and none of it needs GitHub Actions.
+
 - **Supabase project `rent-al`** (Frankfurt, free plan): https://cihhvvhhkgqgqbuwhjwh.supabase.co
 - All migrations are applied (tables, security rules, booking functions, `car-photos` storage bucket, email login) and the seed is loaded (categories, QIRA20). The Supabase security advisor findings are fixed.
 - Unanswered requests expire automatically every 15 minutes (pg_cron job `expire-requests`).
